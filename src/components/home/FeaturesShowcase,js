@@ -1,0 +1,67 @@
+import React from "react";
+import { Search, Brain, ShoppingBag, CheckCircle } from "lucide-react";
+
+const features = [
+  {
+    icon: Search,
+    title: "Universal Product Search",
+    description: "Search for any product across all categories with intelligent brand and model suggestions",
+    color: "blue"
+  },
+  {
+    icon: Brain,
+    title: "AI Review Analysis",
+    description: "Our AI reads thousands of reviews to give you unbiased, comprehensive product insights",
+    color: "purple"
+  },
+  {
+    icon: ShoppingBag,
+    title: "Smart Purchase Options",
+    description: "Get the best deals and purchase links from trusted retailers including Shopee",
+    color: "green"
+  },
+  {
+    icon: CheckCircle,
+    title: "Instant Answers",
+    description: "Ask specific questions and get detailed answers based on real user experiences",
+    color: "orange"
+  }
+];
+
+export default function FeaturesShowcase() {
+  return (
+    <section className="py-20 px-4 bg-slate-100">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-slate-900 mb-4">
+            Everything you need to research products
+          </h2>
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+            From finding the right product to getting the best deal - all in one place
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {features.map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <div key={index} className="relative group">
+                <div className="sleek-card p-8 h-full hover:border-indigo-300 transition-all duration-300 group-hover:-translate-y-2">
+                  <div className={`w-16 h-16 bg-${feature.color}-100 text-${feature.color}-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-3">
+                    {feature.title}
+                  </h3>
+                  <p className="text-slate-600 leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}

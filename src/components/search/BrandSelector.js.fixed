@@ -1,0 +1,142 @@
+import React, { useState, useEffect } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { InvokeLLM } from "../../integrations/Core";
+
+const categoryBrands = {
+  smartphones: ["Apple", "Samsung", "Google", "OnePlus", "Xiaomi", "Huawei", "Sony", "Motorola", "Nothing", "Oppo"],
+  laptops: ["Apple", "Dell", "HP", "Lenovo", "Asus", "Acer", "Microsoft", "MSI", "Razer", "Framework"],
+  headphones: ["Sony", "Bose", "Apple", "Sennheiser", "Audio-Technica", "Beyerdynamic", "JBL", "Beats", "Focal", "Grado"],
+  cameras: ["Canon", "Nikon", "Sony", "Fujifilm", "Panasonic", "Olympus", "Leica", "Pentax", "Hasselblad", "GoPro"],
+  tablets: ["Apple", "Samsung", "Microsoft", "Amazon", "Lenovo", "Huawei", "Google", "Xiaomi", "OnePlus", "ASUS"],
+  smartwatches: ["Apple", "Samsung", "Garmin", "Fitbit", "Amazfit", "Fossil", "Suunto", "Polar", "TicWatch", "Withings"],
+  speakers: ["Sonos", "JBL", "Bose", "Marshall", "KEF", "B&W", "Klipsch", "Harman Kardon", "Ultimate Ears", "Bang & Olufsen"],
+  gaming: ["Sony", "Microsoft", "Nintendo", "ASUS", "MSI", "Alienware", "Corsair", "Razer", "SteelSeries", "Logitech"],
+  home_appliances: ["Dyson", "Shark", "iRobot", "Nest", "Philips", "Samsung", "LG", "Whirlpool", "KitchenAid", "Breville"]
+};
+
+export default function BrandSelector({ category, brand, model, onBrandChange, onModelChange }) {
+  const [availableModels, setAvailableModels] = useState([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [customModel, setCustomModel] = useState("");
+
+  const brands = category ? categoryBrands[category] || [] : Object.values(categoryBrands).flat();
+  const uniqueBrands = [...new Set(brands)].sort();
+
+  useEffect(() => {
+    if (brand && category) {
+      loadModels();
+    } else {
+      setAvailableModels([]);
+    }
+  }, [brand, category]);
+
+  const loadModels = async () => {
+    setIsLoadingModels(true);
+    try {
+      const response = await InvokeLLM({
+        prompt: `List the most popular and current ${brand} ${category} models available in 2024. Include both current and recent models that people commonly search for. Focus on models that are widely reviewed and available for purchase. Return just the model names, one per line, without the brand name.`,
+        add_context_from_internet: true
+      });
+
+      const models = response.split('\n')
+        .filter(line => line.trim())
+        .map(line => line.trim().replace(/^[-•*]\s*/, ''))
+        .filter(model => model && !model.toLowerCase().includes(brand.toLowerCase()))
+        .slice(0, 15);
+
+      setAvailableModels(models);
+    } catch (error) {
+      console.error("Error loading models:", error);
+      setAvailableModels([]);
+    }
+    setIsLoadingModels(false);
+  };
+
+  const handleModelChange = (value) => {
+    if (value === "custom") {
+      onModelChange("");
+    } else {
+      onModelChange(value);
+      setCustomModel("");
+    }
+  };
+
+  const handleCustomModelChange = (e) => {
+    const value = e.target.value;
+    setCustomModel(value);
+    onModelChange(value);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <Label className="text-base font-medium text-gray-700 mb-3 block">
+          2. Select Brand
+        </Label>
+        <Select value={brand} onValueChange={onBrandChange}>
+          <SelectTrigger asChild className="sleek-input h-12 text-base">
+            <button>
+              <SelectValue placeholder="Choose a brand..." />
+            </button>
+          </SelectTrigger>
+          <SelectContent className="bg-white border-gray-200">
+            {uniqueBrands.map((brandName) => (
+              <SelectItem key={brandName} value={brandName} className="text-base py-2.5 text-gray-700 hover:bg-gray-100">
+                {brandName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {brand && (
+        <div>
+          <Label className="text-base font-medium text-gray-700 mb-3 block">
+            3. Select Model
+          </Label>
+          {isLoadingModels ? (
+            <div className="h-12 border border-gray-200 bg-gray-100 rounded-xl flex items-center justify-center">
+              <div className="flex items-center gap-2 text-gray-500">
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-indigo-500 rounded-full animate-spin" />
+                Loading {brand} models...
+              </div>
+            </div>
+          ) : (
+            <>
+              <Select value={model && availableModels.includes(model) ? model : (customModel ? "custom" : "")} onValueChange={handleModelChange}>
+                <SelectTrigger asChild className="sleek-input h-12 text-base">
+                  <button>
+                    <SelectValue placeholder={`Choose ${brand} model...`} />
+                  </button>
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-200">
+                  {availableModels.map((modelName) => (
+                    <SelectItem key={modelName} value={modelName} className="text-base py-2.5 text-gray-700 hover:bg-gray-100">
+                      {modelName}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="custom" className="text-base py-2.5 font-medium text-indigo-600 hover:bg-gray-100">
+                    + Enter model manually
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              {(model === "" || customModel || !availableModels.includes(model)) && (
+                <div className="mt-3">
+                  <Input
+                    placeholder={`Enter the full model name (e.g., iPhone 15 Pro, Galaxy S24 Ultra)`}
+                    value={customModel || (availableModels.includes(model) ? "" : model)}
+                    onChange={handleCustomModelChange}
+                    className="sleek-input h-12 text-base"
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
