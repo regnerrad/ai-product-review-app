@@ -90,7 +90,7 @@ export default function Home() {
       category: searchData.category,
       user_question: searchData.question,
       user_id: user?.id || null
-    });
+    }, null);
     
     console.log("Save result:", result);
   } catch (error) {

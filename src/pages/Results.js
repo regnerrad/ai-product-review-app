@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { callOpenAI } from '../services/openaiService';
+import { saveProductSearchToSupabase } from "../services/productSearchService";
 import { Star, Check, X, ShoppingBag, TrendingUp, ArrowRight, ExternalLink, Shield, Users, Clock } from 'lucide-react';
 
 const Results = () => {
@@ -51,6 +52,20 @@ const Results = () => {
         });
         
         setInsights(aiResponse);
+        // Save search with AI results for caching
+        try {
+          await saveProductSearchToSupabase({
+            brand,
+            model,
+            category: category || "general",
+            user_question: question,
+            user_id: null // TODO: Add user authentication
+          }, aiResponse);
+          console.log("Search with AI results saved for caching");
+        } catch (saveError) {
+          console.error("Failed to save search with results:", saveError);
+          // Don't fail the whole request if save fails
+        }
       } catch (err) {
         console.error('Error fetching AI insights:', err);
         setError(`Failed to get AI insights: ${err.message}`);
