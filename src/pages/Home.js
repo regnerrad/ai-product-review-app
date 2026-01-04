@@ -7,7 +7,7 @@ import BrandSelector from "../components/search/BrandSelector";
 import QuestionInput from "../components/search/QuestionInput";
 import CategoryFilter from "../components/search/CategoryFilter";
 import SignupPrompt from "../components/auth/SignupPrompt";
-
+import { saveProductSearchToSupabase } from "../services/productSearchService";
 import { useAuth } from "../components/hooks/useAuth";
 import { useSessionTracking } from "../components/hooks/useSessionTracking";
 import { findSimilarCachedResults } from "../components/utils/cacheUtils";
@@ -73,9 +73,30 @@ export default function Home() {
     }
 
     setIsSearching(true);
+
+  // Save search to Supabase
+  try {
+    console.log("Attempting to save search to Supabase:", {
+      brand: searchData.brand,
+      model: searchData.model,
+      category: searchData.category,
+      user_question: searchData.question,
+      user_id: user?.id || null
+    });
     
-    // FIXED: Navigate to results with state instead of URL parameters
-    navigate("/results", {
+    const result = await saveProductSearchToSupabase({
+      brand: searchData.brand,
+      model: searchData.model,
+      category: searchData.category,
+      user_question: searchData.question,
+      user_id: user?.id || null
+    });
+    
+    console.log("Save result:", result);
+  } catch (error) {
+    console.error("Failed to save search:", error);
+    // Continue anyway - don't block the user
+  }    navigate("/results", {
       state: {
         brand: searchData.brand,
         model: searchData.model,
