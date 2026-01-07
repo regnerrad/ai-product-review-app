@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { callOpenAI } from '../services/openaiService';
-import { saveProductSearchToSupabase } from "../services/productSearchService";
+import { saveProductSearchToSupabase, updateSearchWithResults } from "../services/productSearchService";
 import { Star, Check, X, ShoppingBag, TrendingUp, ArrowRight, ExternalLink, Shield, Users, Clock } from 'lucide-react';
 
 const Results = () => {
@@ -18,7 +18,8 @@ const Results = () => {
         category: location.state.category,
         brand: location.state.brand,
         model: location.state.model,
-        question: location.state.question
+        question: location.state.question,
+        searchId: location.state.searchId
       };
     }
     
@@ -32,7 +33,7 @@ const Results = () => {
     };
   };
 
-  const { category, brand, model, question } = getSearchParams();
+  const { category, brand, model, question, searchId } = getSearchParams();
 
   useEffect(() => {
     const fetchAIInsights = async () => {
@@ -54,16 +55,45 @@ const Results = () => {
         setInsights(aiResponse);
         // Save search with AI results for caching
         try {
-          await saveProductSearchToSupabase({
-            brand,
-            model,
-            category: category || "general",
-            user_question: question,
-            user_id: null // TODO: Add user authentication
-          }, aiResponse);
-          console.log("Search with AI results saved for caching");
+          console.log("=== DEBUG: Starting to save AI results ===");
+          console.log("searchId received:", searchId);
+          console.log("searchId type:", typeof searchId);
+          console.log("aiResponse:", aiResponse);
+          console.log("aiResponse keys:", Object.keys(aiResponse));
+  
+          // Update existing search or create new if no searchId
+          if (searchId) {
+            console.log("DEBUG: Calling updateSearchWithResults with searchId:", searchId);
+            try {
+              const updateResult = await updateSearchWithResults(searchId, aiResponse);
+              console.log("DEBUG: updateSearchWithResults returned:", updateResult);
+              console.log("✅ Existing search updated with AI results");
+            } catch (updateError) {
+              console.error("❌ updateSearchWithResults failed:", updateError);
+              console.error("Error details:", {
+                message: updateError.message,
+                name: updateError.name
+              });
+            }
+          } else {
+            console.log("DEBUG: No searchId, creating new record...");
+            try {
+              const saveResult = await saveProductSearchToSupabase({
+                brand,
+                model,
+                category: category || "general",
+                user_question: question,
+                user_id: null // TODO: Add user authentication
+              }, aiResponse);
+              console.log("DEBUG: saveProductSearchToSupabase returned:", saveResult);
+              console.log("✅ New search saved with AI results");
+            } catch (saveError) {
+              console.error("❌ saveProductSearchToSupabase failed:", saveError);
+            }
+          }
+          console.log("✅ Search with AI results saved for caching");
         } catch (saveError) {
-          console.error("Failed to save search with results:", saveError);
+          console.error("❌ Outer catch: Failed to save search with results:", saveError);
           // Don't fail the whole request if save fails
         }
       } catch (err) {
