@@ -12,7 +12,7 @@ export const saveProductSearchToSupabase = async (searchData, aiResults = null) 
           user_question: searchData.user_question,
           user_id: searchData.user_id,
           query: `${searchData.brand} ${searchData.model} ${searchData.category}: ${searchData.user_question}`,
-          results: aiResults, // Store AI results if available
+          results: aiResults,
           created_at: new Date().toISOString()
         }
       ])
@@ -23,8 +23,8 @@ export const saveProductSearchToSupabase = async (searchData, aiResults = null) 
       throw error;
     }
     
-    console.log('Search saved successfully:', data);
-    return data;
+    // RETURN JUST THE ID for updating later
+    return data[0]?.id || null;
   } catch (error) {
     console.error('Error saving search to Supabase:', error);
     throw error;
@@ -65,5 +65,30 @@ export const findSimilarCachedResults = async (brand, model, category, question)
   } catch (error) {
     console.error('Error in findSimilarCachedResults:', error);
     return [];
+  }
+};
+
+// NEW FUNCTION: Update existing search with AI results
+export const updateSearchWithResults = async (searchId, aiResults) => {
+  try {
+    const { data, error } = await supabase
+      .from('product_searches')
+      .update({ 
+        results: aiResults,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', searchId)
+      .select();
+
+    if (error) {
+      console.error('Error updating search with results:', error);
+      throw error;
+    }
+    
+    console.log('Search updated with AI results');
+    return data;
+  } catch (error) {
+    console.error('Error in updateSearchWithResults:', error);
+    throw error;
   }
 };

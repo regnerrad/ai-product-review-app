@@ -55,45 +55,20 @@ const Results = () => {
         setInsights(aiResponse);
         // Save search with AI results for caching
         try {
-          console.log("=== DEBUG: Starting to save AI results ===");
-          console.log("searchId received:", searchId);
-          console.log("searchId type:", typeof searchId);
-          console.log("aiResponse:", aiResponse);
-          console.log("aiResponse keys:", Object.keys(aiResponse));
-  
           // Update existing search or create new if no searchId
           if (searchId) {
-            console.log("DEBUG: Calling updateSearchWithResults with searchId:", searchId);
-            try {
-              const updateResult = await updateSearchWithResults(searchId, aiResponse);
-              console.log("DEBUG: updateSearchWithResults returned:", updateResult);
-              console.log("✅ Existing search updated with AI results");
-            } catch (updateError) {
-              console.error("❌ updateSearchWithResults failed:", updateError);
-              console.error("Error details:", {
-                message: updateError.message,
-                name: updateError.name
-              });
-            }
+            await updateSearchWithResults(searchId, aiResponse);
           } else {
-            console.log("DEBUG: No searchId, creating new record...");
-            try {
-              const saveResult = await saveProductSearchToSupabase({
-                brand,
-                model,
-                category: category || "general",
-                user_question: question,
-                user_id: null // TODO: Add user authentication
-              }, aiResponse);
-              console.log("DEBUG: saveProductSearchToSupabase returned:", saveResult);
-              console.log("✅ New search saved with AI results");
-            } catch (saveError) {
-              console.error("❌ saveProductSearchToSupabase failed:", saveError);
-            }
+            await saveProductSearchToSupabase({
+              brand,
+              model,
+              category: category || "general",
+              user_question: question,
+              user_id: null // TODO: Add user authentication
+            }, aiResponse);
           }
-          console.log("✅ Search with AI results saved for caching");
         } catch (saveError) {
-          console.error("❌ Outer catch: Failed to save search with results:", saveError);
+          console.error("Failed to save search with results:", saveError);
           // Don't fail the whole request if save fails
         }
       } catch (err) {

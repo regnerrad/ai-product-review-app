@@ -61,7 +61,7 @@ export default function Home() {
     }
   };
 
-  const handleSearch = async () => {
+const handleSearch = async () => {
     if (!searchData.brand || !searchData.model || !searchData.question) {
       return;
     }
@@ -74,34 +74,30 @@ export default function Home() {
 
     setIsSearching(true);
 
-  // Save search to Supabase
-  try {
-    console.log("Attempting to save search to Supabase:", {
-      brand: searchData.brand,
-      model: searchData.model,
-      category: searchData.category,
-      user_question: searchData.question,
-      user_id: user?.id || null
-    });
+    let searchId = null;
     
-    const result = await saveProductSearchToSupabase({
-      brand: searchData.brand,
-      model: searchData.model,
-      category: searchData.category,
-      user_question: searchData.question,
-      user_id: user?.id || null
-    }, null);
+    // Save search to Supabase
+    try {
+      searchId = await saveProductSearchToSupabase({
+        brand: searchData.brand,
+        model: searchData.model,
+        category: searchData.category,
+        user_question: searchData.question,
+        user_id: user?.id || null
+      });
+    } catch (error) {
+      console.error("Failed to save search:", error);
+      // Continue anyway - don't block the user
+    }
     
-    console.log("Save result:", result);
-  } catch (error) {
-    console.error("Failed to save search:", error);
-    // Continue anyway - don't block the user
-  }    navigate("/results", {
+    // Navigate with the searchId
+    navigate("/results", {
       state: {
         brand: searchData.brand,
         model: searchData.model,
         category: searchData.category,
-        question: searchData.question
+        question: searchData.question,
+        searchId: searchId
       }
     });
   };
