@@ -7,10 +7,9 @@ import BrandSelector from "../components/search/BrandSelector";
 import QuestionInput from "../components/search/QuestionInput";
 import CategoryFilter from "../components/search/CategoryFilter";
 import SignupPrompt from "../components/auth/SignupPrompt";
-import { saveProductSearchToSupabase } from "../services/productSearchService";
+import { saveProductSearchToSupabase, findSimilarCachedResults } from "../services/productSearchService";
 import { useAuth } from "../components/hooks/useAuth";
 import { useSessionTracking } from "../components/hooks/useSessionTracking";
-import { findSimilarCachedResults } from "../components/utils/cacheUtils";
 
 // Local createPageUrl function
 const createPageUrl = (page) => {
@@ -52,16 +51,16 @@ export default function Home() {
       const similar = await findSimilarCachedResults(
         searchData.brand, 
         searchData.model, 
-        searchData.question || "general review", 
-        3
+        searchData.category || "general",
+        searchData.question || ""
       );
-      setSimilarResults(similar);
+      setSimilarResults(similar.slice(0, 3)); // Limit to 3 results for display
     } catch (error) {
       console.error("Error loading similar results:", error);
     }
   };
 
-const handleSearch = async () => {
+  const handleSearch = async () => {
     if (!searchData.brand || !searchData.model || !searchData.question) {
       return;
     }
@@ -103,13 +102,14 @@ const handleSearch = async () => {
   };
 
   const handleUseSimilarResult = (result) => {
-    // FIXED: Navigate with state instead of URL parameters
+    // Navigate with state instead of URL parameters
     navigate("/results", {
       state: {
         brand: result.brand,
         model: result.model,
         category: result.category || "",
-        question: result.user_question
+        question: result.user_question,
+        searchId: result.id  // Pass the existing search ID to avoid duplicate
       }
     });
   };
@@ -208,7 +208,7 @@ const handleSearch = async () => {
                             </div>
                             <div className="flex items-center gap-1.5 text-xs text-slate-500">
                               <Users className="w-3 h-3" />
-                              {result.usage_count} searches
+                              {result.usage_count || 1} searches
                             </div>
                           </div>
                         </button>
