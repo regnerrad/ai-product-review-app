@@ -7,9 +7,11 @@ import BrandSelector from "../components/search/BrandSelector";
 import QuestionInput from "../components/search/QuestionInput";
 import CategoryFilter from "../components/search/CategoryFilter";
 import SignupPrompt from "../components/auth/SignupPrompt";
+import Stepper from "../components/Stepper";
 import { saveProductSearchToSupabase, findSimilarCachedResults } from "../services/productSearchService";
 import { useAuth } from "../components/hooks/useAuth";
 import { useSessionTracking } from "../components/hooks/useSessionTracking";
+import { STEPS, STEP_CONFIG } from "../config/steps";
 
 // Local createPageUrl function
 const createPageUrl = (page) => {
@@ -27,45 +29,67 @@ export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const { sessionData, incrementSearchCount } = useSessionTracking();
   
-  const [searchData, setSearchData] = useState({
-    brand: "",
-    model: "",
+  // Track which step is currently active for highlighting
+  const [activeStep, setActiveStep] = useState(1);
+  const [stepData, setStepData] = useState({
     category: "",
+    brand: "", 
+    model: "",
     question: ""
   });
+  
   const [isSearching, setIsSearching] = useState(false);
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const [similarResults, setSimilarResults] = useState([]);
+  const [showManualModelInput, setShowManualModelInput] = useState(false);
 
-  // Check for similar cached results when brand and model are selected
+  // Load suggestions on initial mount and when brand/model changes
   useEffect(() => {
-    if (searchData.brand && searchData.model) {
-      loadSimilarResults();
-    } else {
-      setSimilarResults([]);
-    }
-  }, [searchData.brand, searchData.model]);
+    loadSimilarResults();
+  }, [stepData.brand, stepData.model]);
 
   const loadSimilarResults = async () => {
     try {
-      const similar = await findSimilarCachedResults(
-        searchData.brand, 
-        searchData.model, 
-        searchData.category || "general",
-        searchData.question || ""
-      );
-      setSimilarResults(similar.slice(0, 3)); // Limit to 3 results for display
+      // If brand and model are selected, load specific suggestions
+      if (stepData.brand && stepData.model) {
+        const similar = await findSimilarCachedResults(
+          stepData.brand, 
+          stepData.model, 
+          stepData.category || "general",
+          stepData.question || ""
+        );
+        setSimilarResults(similar.slice(0, 5));
+      } 
+      // Otherwise, load general/trending suggestions
+      else {
+        // You might want to create a new function for general suggestions
+        // For now, we'll show some placeholder or load from a default category
+        const generalSuggestions = [
+          { user_question: "Is it good for gaming?", usage_count: 45 },
+          { user_question: "How is the battery life?", usage_count: 32 },
+          { user_question: "Is it worth the price?", usage_count: 28 },
+          { user_question: "How does the camera perform?", usage_count: 24 },
+          { user_question: "Is it durable and long-lasting?", usage_count: 19 }
+        ];
+        setSimilarResults(generalSuggestions);
+      }
     } catch (error) {
       console.error("Error loading similar results:", error);
+      // Show default suggestions even on error
+      const defaultSuggestions = [
+        { user_question: "Is it good for gaming?", usage_count: 0 },
+        { user_question: "How is the battery life?", usage_count: 0 },
+        { user_question: "Is it worth the price?", usage_count: 0 }
+      ];
+      setSimilarResults(defaultSuggestions);
     }
   };
 
   const handleSearch = async () => {
-    if (!searchData.brand || !searchData.model || !searchData.question) {
+    if (!stepData.brand || !stepData.model || !stepData.question) {
       return;
     }
 
-    // Check if user needs to sign up (only for non-authenticated users)
     if (!isAuthenticated && sessionData && sessionData.requires_signup) {
       setShowSignupPrompt(true);
       return;
@@ -75,63 +99,49 @@ export default function Home() {
 
     let searchId = null;
     
-    // Save search to Supabase
     try {
       searchId = await saveProductSearchToSupabase({
-        brand: searchData.brand,
-        model: searchData.model,
-        category: searchData.category,
-        user_question: searchData.question,
+        brand: stepData.brand,
+        model: stepData.model,
+        category: stepData.category,
+        user_question: stepData.question,
         user_id: user?.id || null
       });
     } catch (error) {
       console.error("Failed to save search:", error);
-      // Continue anyway - don't block the user
     }
     
-    // Navigate with the searchId
     navigate("/results", {
       state: {
-        brand: searchData.brand,
-        model: searchData.model,
-        category: searchData.category,
-        question: searchData.question,
+        brand: stepData.brand,
+        model: stepData.model,
+        category: stepData.category,
+        question: stepData.question,
         searchId: searchId
       }
     });
   };
 
   const handleUseSimilarResult = (result) => {
-    // Navigate with state instead of URL parameters
-    navigate("/results", {
-      state: {
-        brand: result.brand,
-        model: result.model,
-        category: result.category || "",
-        question: result.user_question,
-        searchId: result.id  // Pass the existing search ID to avoid duplicate
-      }
-    });
+    updateStepData("question", result.user_question);
   };
 
-  const updateSearchData = (field, value) => {
-    setSearchData(prev => ({ ...prev, [field]: value }));
+  const updateStepData = (field, value) => {
+    setStepData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSignupPromptClose = (allowOneMore = false) => {
     setShowSignupPrompt(false);
     if (allowOneMore) {
-      // Continue with search after allowing one more
       handleSearch();
     }
   };
 
-  const isSearchReady = searchData.brand && searchData.model && searchData.question;
+  const isSearchReady = stepData.brand && stepData.model && stepData.question;
 
   return (
     <>
       <div className="min-h-screen bg-slate-50">
-        {/* Search Interface - Now at the top */}
         <section className="py-16 px-6 bg-white">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
@@ -168,56 +178,56 @@ export default function Home() {
             </div>
 
             <div className="sleek-card p-8 md:p-10">
-              <div className="space-y-8">
-                <CategoryFilter 
-                  value={searchData.category}
-                  onChange={(value) => updateSearchData("category", value)}
-                />
-                
-                <BrandSelector
-                  category={searchData.category}
-                  brand={searchData.brand}
-                  model={searchData.model}
-                  onBrandChange={(value) => updateSearchData("brand", value)}
-                  onModelChange={(value) => updateSearchData("model", value)}
-                />
-                
-                <QuestionInput
-                  value={searchData.question}
-                  onChange={(value) => updateSearchData("question", value)}
-                  brand={searchData.brand}
-                  model={searchData.model}
-                />
-
-                {similarResults.length > 0 && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
-                      <Clock className="w-4 h-4" />
-                      Popular questions for {searchData.brand} {searchData.model}:
-                    </div>
-                    <div className="grid gap-3">
-                      {similarResults.map((result, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleUseSimilarResult(result)}
-                          className="text-left p-4 bg-slate-100 hover:bg-slate-200/70 rounded-lg transition-all duration-200 group"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="font-medium text-indigo-600 group-hover:text-indigo-700 transition-colors">
-                              "{result.user_question}"
-                            </div>
-                            <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                              <Users className="w-3 h-3" />
-                              {result.usage_count || 1} searches
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
+              <div className="mb-10">
+                <Stepper currentStep={activeStep} steps={STEPS} />
+              </div>
+              
+              <div className="space-y-10">
+                {/* Step 1: Category */}
+                <div className={`step-section ${activeStep >= 1 ? 'active' : ''}`}>
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">{STEP_CONFIG[1].title}</h3>
+                    <p className="text-slate-600">{STEP_CONFIG[1].description}</p>
                   </div>
-                )}
+                  <CategoryFilter 
+                    value={stepData.category}
+                    onChange={(value) => updateStepData("category", value)}
+                  />
+                </div>
+                
+                {/* Step 2: Product */}
+                <div className={`step-section ${activeStep >= 2 ? 'active' : ''}`}>
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">{STEP_CONFIG[2].title}</h3>
+                    <p className="text-slate-600">{STEP_CONFIG[2].description}</p>
+                  </div>
+                  <BrandSelector
+                    category={stepData.category}
+                    brand={stepData.brand}
+                    model={stepData.model}
+                    onBrandChange={(value) => updateStepData("brand", value)}
+                    onModelChange={(value) => updateStepData("model", value)}
+                    showManualInput={showManualModelInput}
+                    onShowManualInput={setShowManualModelInput}
+                  />
+                </div>
+                
+                {/* Step 3: Question */}
+                <div className={`step-section ${activeStep >= 3 ? 'active' : ''}`}>
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">{STEP_CONFIG[3].title}</h3>
+                    <p className="text-slate-600">{STEP_CONFIG[3].description}</p>
+                  </div>
+                  <QuestionInput
+                    value={stepData.question}
+                    onChange={(value) => updateStepData("question", value)}
+                    brand={stepData.brand}
+                    model={stepData.model}
+                  />
+                </div>
 
-                <div className="flex justify-center pt-4">
+                {/* Submit Button */}
+                <div className="flex justify-center pt-8">
                   <Button
                     onClick={handleSearch}
                     disabled={!isSearchReady || isSearching}
@@ -241,7 +251,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Benefits Section - More natural and less template-ish */}
+        {/* Benefits Section */}
         <section className="py-20 px-6 bg-slate-50">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">

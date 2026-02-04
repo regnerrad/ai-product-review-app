@@ -16,24 +16,35 @@ const categoryBrands = {
   home_appliances: ["Dyson", "Shark", "iRobot", "Nest", "Philips", "Samsung", "LG", "Whirlpool", "KitchenAid", "Breville"]
 };
 
-export default function BrandSelector({ category, brand, model, onBrandChange, onModelChange }) {
+export default function BrandSelector({ 
+  category, 
+  brand, 
+  model, 
+  onBrandChange, 
+  onModelChange,
+  showManualInput = false,
+  onShowManualInput 
+}) {
   const [availableModels, setAvailableModels] = useState([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [loadModelsError, setLoadModelsError] = useState(false);
   const [customModel, setCustomModel] = useState("");
 
   const brands = category ? categoryBrands[category] || [] : Object.values(categoryBrands).flat();
   const uniqueBrands = [...new Set(brands)].sort();
 
   useEffect(() => {
-    if (brand && category) {
+    if (brand && category && !showManualInput) {
       loadModels();
     } else {
       setAvailableModels([]);
+      setLoadModelsError(false);
     }
-  }, [brand, category]);
+  }, [brand, category, showManualInput]);
 
   const loadModels = async () => {
     setIsLoadingModels(true);
+    setLoadModelsError(false);
     try {
       console.log('DEBUG: loadModels called with brand:', brand, 'category:', category);
       const response = await InvokeLLM({
@@ -48,8 +59,16 @@ export default function BrandSelector({ category, brand, model, onBrandChange, o
         .slice(0, 15);
 
       setAvailableModels(models);
+      
+      // If no models returned, show manual input
+      if (models.length === 0) {
+        setLoadModelsError(true);
+        if (onShowManualInput) onShowManualInput(true);
+      }
     } catch (error) {
       console.error('DEBUG: Error loading models:', error);
+      setLoadModelsError(true);
+      if (onShowManualInput) onShowManualInput(true);
     } finally {
       setIsLoadingModels(false);
     }
@@ -59,9 +78,11 @@ export default function BrandSelector({ category, brand, model, onBrandChange, o
     if (value === "custom") {
       setCustomModel("");
       onModelChange("");
+      if (onShowManualInput) onShowManualInput(true);
     } else {
       setCustomModel("");
       onModelChange(value);
+      if (onShowManualInput) onShowManualInput(false);
     }
   };
 
@@ -70,6 +91,9 @@ export default function BrandSelector({ category, brand, model, onBrandChange, o
     setCustomModel(value);
     onModelChange(value);
   };
+
+  // Show manual input if: explicitly requested OR error loading models OR no models available
+  const shouldShowManualInput = showManualInput || loadModelsError || (availableModels.length === 0 && brand && !isLoadingModels);
 
   return (
     <div className="space-y-6">
@@ -103,10 +127,33 @@ export default function BrandSelector({ category, brand, model, onBrandChange, o
               Loading {brand} models...
             </div>
           </div>
+        ) : shouldShowManualInput ? (
+          <div className="space-y-3">
+            {loadModelsError && (
+              <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+                Unable to load model list. Please enter the model name manually.
+              </div>
+            )}
+            <Input
+              placeholder={`Enter the full model name (e.g., iPhone 15 Pro, Galaxy S24 Ultra)`}
+              value={customModel || model}
+              onChange={handleCustomModelChange}
+              disabled={!brand}
+              className="sleek-input h-12 text-base"
+            />
+            {availableModels.length > 0 && (
+              <button
+                onClick={() => onShowManualInput && onShowManualInput(false)}
+                className="text-sm text-indigo-600 hover:text-indigo-700"
+              >
+                ← Back to model list
+              </button>
+            )}
+          </div>
         ) : (
           <>
             <Select 
-              value={model && availableModels.includes(model) ? model : (customModel ? "custom" : "")} 
+              value={model && availableModels.includes(model) ? model : ""} 
               onValueChange={handleModelChange} 
               disabled={!brand}
             >
@@ -124,18 +171,6 @@ export default function BrandSelector({ category, brand, model, onBrandChange, o
                 </SelectItem>
               </SelectContent>
             </Select>
-
-            {(model === "" || customModel || !availableModels.includes(model)) && (
-              <div className="mt-3">
-                <Input
-                  placeholder={brand ? `Enter the full model name (e.g., iPhone 15 Pro, Galaxy S24 Ultra)` : "Select a brand first"}
-                  value={customModel || (availableModels.includes(model) ? "" : model)}
-                  onChange={handleCustomModelChange}
-                  disabled={!brand}
-                  className="sleek-input h-12 text-base"
-                />
-              </div>
-            )}
           </>
         )}
       </div>

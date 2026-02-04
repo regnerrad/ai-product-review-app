@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
@@ -17,14 +16,11 @@ const suggestedQuestions = [
 ];
 
 export default function QuestionInput({ value, onChange, brand, model }) {
-  const [showSuggestions, setShowSuggestions] = useState(true);
+  const productName = brand && model ? `${brand} ${model}` : "this product";
 
   const handleSuggestionClick = (suggestion) => {
     onChange(suggestion);
-    setShowSuggestions(false);
   };
-
-  const productName = brand && model ? `${brand} ${model}` : "this product";
 
   return (
     <div className="space-y-4">
@@ -41,30 +37,32 @@ export default function QuestionInput({ value, onChange, brand, model }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="sleek-input min-h-[120px] text-base resize-none p-4"
-        onFocus={() => setShowSuggestions(false)}
       />
 
-      {showSuggestions && !value && (
-        <div className="space-y-3 pt-2">
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
-            <Lightbulb className="w-4 h-4 text-amber-500" />
-            Suggestions:
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {suggestedQuestions.map((question, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                size="sm"
-                onClick={() => handleSuggestionClick(question)}
-                className="text-sm bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-800 transition-colors"
-              >
-                {question}
-              </Button>
-            ))}
-          </div>
+      {/* PERSISTENT SUGGESTIONS - Always visible */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+          <Lightbulb className="w-4 h-4 text-amber-500" />
+          Suggestions:
         </div>
-      )}
+        <div className="flex flex-wrap gap-2">
+          {suggestedQuestions.map((question, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              size="sm"
+              onClick={() => handleSuggestionClick(question)}
+              className={`text-sm border transition-colors ${
+                value === question 
+                  ? 'bg-indigo-100 border-indigo-200 text-indigo-700' 
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-800'
+              }`}
+            >
+              {question}
+            </Button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
