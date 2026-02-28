@@ -1,20 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import { InvokeLLM } from "../../integrations/Core";
-
-const categoryBrands = {
-  smartphones: ["Apple", "Samsung", "Google", "OnePlus", "Xiaomi", "Huawei", "Sony", "Motorola", "Nothing", "Oppo"],
-  laptops: ["Apple", "Dell", "HP", "Lenovo", "Asus", "Acer", "Microsoft", "MSI", "Razer", "Framework"],
-  headphones: ["Sony", "Bose", "Apple", "Sennheiser", "Audio-Technica", "Beyerdynamic", "JBL", "Beats", "Focal", "Grado"],
-  cameras: ["Canon", "Nikon", "Sony", "Fujifilm", "Panasonic", "Olympus", "Leica", "Pentax", "Hasselblad", "GoPro"],
-  tablets: ["Apple", "Samsung", "Microsoft", "Amazon", "Lenovo", "Huawei", "Google", "Xiaomi", "OnePlus", "ASUS"],
-  smartwatches: ["Apple", "Samsung", "Garmin", "Fitbit", "Amazfit", "Fossil", "Suunto", "Polar", "TicWatch", "Withings"],
-  speakers: ["Sonos", "JBL", "Bose", "Marshall", "KEF", "B&W", "Klipsch", "Harman Kardon", "Ultimate Ears", "Bang & Olufsen"],
-  gaming: ["Sony", "Microsoft", "Nintendo", "ASUS", "MSI", "Alienware", "Corsair", "Razer", "SteelSeries", "Logitech"],
-  home_appliances: ["Dyson", "Shark", "iRobot", "Nest", "Philips", "Samsung", "LG", "Whirlpool", "KitchenAid", "Breville"]
-};
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { ChevronDown, Search, Plus, X } from "lucide-react";
+import { getModelsForBrand } from "../../data/models";
 
 export default function BrandSelector({ 
   category, 
@@ -22,156 +11,217 @@ export default function BrandSelector({
   model, 
   onBrandChange, 
   onModelChange,
-  showManualInput = false,
-  onShowManualInput 
+  showManualInput,
+  onShowManualInput
 }) {
+  const [brandSearch, setBrandSearch] = useState("");
+  const [modelSearch, setModelSearch] = useState("");
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [availableModels, setAvailableModels] = useState([]);
-  const [isLoadingModels, setIsLoadingModels] = useState(false);
-  const [loadModelsError, setLoadModelsError] = useState(false);
-  const [customModel, setCustomModel] = useState("");
 
-  const brands = category ? categoryBrands[category] || [] : Object.values(categoryBrands).flat();
-  const uniqueBrands = [...new Set(brands)].sort();
-
+  // Update available models when brand changes
   useEffect(() => {
-    if (brand && category && !showManualInput) {
-      loadModels();
+    if (brand) {
+      const models = getModelsForBrand(brand);
+      setAvailableModels(models);
     } else {
       setAvailableModels([]);
-      setLoadModelsError(false);
     }
-  }, [brand, category, showManualInput]);
+  }, [brand]);
 
-  const loadModels = async () => {
-    setIsLoadingModels(true);
-    setLoadModelsError(false);
-    try {
-      console.log('DEBUG: loadModels called with brand:', brand, 'category:', category);
-      const response = await InvokeLLM({
-        prompt: `List the most popular and current ${brand} ${category} models available in 2024. Include both current and recent models that people commonly search for. Focus on models that are widely reviewed and available for purchase. Return just the model names, one per line, without the brand name.`,
-        add_context_from_internet: true
-      });
+  // Mock brand list (you can expand this)
+  const popularBrands = [
+    "Apple", "Samsung", "Google", "OnePlus", "Xiaomi",
+    "Sony", "Bose", "Sennheiser", "Beats",
+    "Dell", "HP", "Lenovo", "ASUS", "Acer", "Microsoft",
+    "LG", "TCL", "Hisense"
+  ];
 
-      const models = response.split('\n')
-        .filter(line => line.trim())
-        .map(line => line.trim().replace(/^[-•*]\s*/, ''))
-        .filter(model => model && !model.toLowerCase().includes(brand.toLowerCase()))
-        .slice(0, 15);
+  const filteredBrands = popularBrands.filter(b => 
+    b.toLowerCase().includes(brandSearch.toLowerCase())
+  );
 
-      setAvailableModels(models);
-      
-      // If no models returned, show manual input
-      if (models.length === 0) {
-        setLoadModelsError(true);
-        if (onShowManualInput) onShowManualInput(true);
-      }
-    } catch (error) {
-      console.error('DEBUG: Error loading models:', error);
-      setLoadModelsError(true);
-      if (onShowManualInput) onShowManualInput(true);
-    } finally {
-      setIsLoadingModels(false);
-    }
+  const filteredModels = availableModels.filter(m => 
+    m.toLowerCase().includes(modelSearch.toLowerCase())
+  );
+
+  const handleSelectBrand = (selectedBrand) => {
+    onBrandChange(selectedBrand);
+    onModelChange(""); // Reset model when brand changes
+    setBrandSearch("");
+    setShowBrandDropdown(false);
   };
 
-  const handleModelChange = (value) => {
-    if (value === "custom") {
-      setCustomModel("");
-      onModelChange("");
-      if (onShowManualInput) onShowManualInput(true);
-    } else {
-      setCustomModel("");
-      onModelChange(value);
-      if (onShowManualInput) onShowManualInput(false);
-    }
+  const handleSelectModel = (selectedModel) => {
+    onModelChange(selectedModel);
+    setModelSearch("");
+    setShowModelDropdown(false);
   };
-
-  const handleCustomModelChange = (e) => {
-    const value = e.target.value;
-    setCustomModel(value);
-    onModelChange(value);
-  };
-
-  // Show manual input if: explicitly requested OR error loading models OR no models available
-  const shouldShowManualInput = showManualInput || loadModelsError || (availableModels.length === 0 && brand && !isLoadingModels);
 
   return (
     <div className="space-y-6">
-      <div>
-        <Label className="text-base font-medium text-gray-700 mb-3 block">
-          2. Select Brand
-        </Label>
-        <Select value={brand} onValueChange={onBrandChange}>
-          <SelectTrigger className="sleek-input h-12 text-base">
-            <SelectValue placeholder="Choose a brand..." />
-          </SelectTrigger>
-          <SelectContent className="bg-white border-gray-200">
-            {uniqueBrands.map((brandName) => (
-              <SelectItem key={brandName} value={brandName} className="text-base py-2.5 text-gray-700 hover:bg-gray-100">
-                {brandName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {/* Brand Selection */}
+      <div className="space-y-2">
+        <Label className="text-base font-medium text-slate-700">Brand</Label>
+        <div className="relative">
+          <div
+            onClick={() => setShowBrandDropdown(!showBrandDropdown)}
+            className={`w-full px-4 py-3 bg-white border rounded-lg flex items-center justify-between transition-all duration-200 cursor-pointer ${
+              showBrandDropdown 
+                ? 'border-indigo-500 ring-2 ring-indigo-200' 
+                : 'border-slate-200 hover:border-indigo-200'
+            }`}
+          >
+            <span className={brand ? "text-slate-900" : "text-slate-400"}>
+              {brand || "Select a brand"}
+            </span>
+            <ChevronDown className={`w-4 h-4 text-slate-400 transition-all duration-200 ${
+              showBrandDropdown ? "rotate-180 text-indigo-500" : ""
+            }`} />
+          </div>
+
+          {showBrandDropdown && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="p-2 border-b border-slate-100">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    autoFocus
+                    placeholder="Search brands..."
+                    value={brandSearch}
+                    onChange={(e) => setBrandSearch(e.target.value)}
+                    className="pl-9 pr-4 py-2 text-sm"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              </div>
+              <div className="max-h-60 overflow-y-auto p-1">
+                {filteredBrands.length > 0 ? (
+                  filteredBrands.map((b) => (
+                    <button
+                      key={b}
+                      onClick={() => handleSelectBrand(b)}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                        brand === b 
+                          ? "bg-indigo-50 text-indigo-700" 
+                          : "hover:bg-slate-50 text-slate-700"
+                      }`}
+                    >
+                      {b}
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-3 py-2 text-sm text-slate-400 italic">
+                    No brands found
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div>
-        <Label className="text-base font-medium text-gray-700 mb-3 block">
-          3. Select Model
-        </Label>
-        
-        {isLoadingModels ? (
-          <div className="h-12 border border-gray-200 bg-gray-100 rounded-xl flex items-center justify-center">
-            <div className="flex items-center gap-2 text-gray-500">
-              <div className="w-4 h-4 border-2 border-gray-300 border-t-indigo-500 rounded-full animate-spin" />
-              Loading {brand} models...
+      {/* Model Selection */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-base font-medium text-slate-700">Model</Label>
+          {brand && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onShowManualInput(!showManualInput)}
+              className="text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+            >
+              {showManualInput ? (
+                <span className="flex items-center gap-1">
+                  <X className="w-3 h-3" />
+                  Hide manual input
+                </span>
+              ) : (
+                <span className="flex items-center gap-1">
+                  <Plus className="w-3 h-3" />
+                  Can't find your model?
+                </span>
+              )}
+            </Button>
+          )}
+        </div>
+
+        {showManualInput ? (
+          <Input
+            placeholder="Enter model manually (e.g., iPhone 14 Pro)"
+            value={model}
+            onChange={(e) => onModelChange(e.target.value)}
+            className="sleek-input"
+          />
+        ) : (
+          <div className="relative">
+            <div
+              onClick={() => setShowModelDropdown(!showModelDropdown)}
+              className={`w-full px-4 py-3 bg-white border rounded-lg flex items-center justify-between transition-all duration-200 ${
+                !brand ? 'cursor-not-allowed' : 'cursor-pointer'
+              } ${
+                showModelDropdown 
+                  ? 'border-indigo-500 ring-2 ring-indigo-200' 
+                  : 'border-slate-200 hover:border-indigo-200'
+              }`}
+            >
+              <span className={model ? "text-slate-900" : "text-slate-400"}>
+                {model || (brand ? "Select a model" : "Select a brand first")}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-slate-400 transition-all duration-200 ${
+                showModelDropdown ? "rotate-180 text-indigo-500" : ""
+              }`} />
             </div>
-          </div>
-        ) : shouldShowManualInput ? (
-          <div className="space-y-3">
-            {loadModelsError && (
-              <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
-                Unable to load model list. Please enter the model name manually.
+
+            {showModelDropdown && brand && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-2 border-b border-slate-100">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      autoFocus
+                      placeholder="Search models..."
+                      value={modelSearch}
+                      onChange={(e) => setModelSearch(e.target.value)}
+                      className="pl-9 pr-4 py-2 text-sm"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                </div>
+                <div className="max-h-60 overflow-y-auto p-1">
+                  {filteredModels.length > 0 ? (
+                    filteredModels.map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => handleSelectModel(m)}
+                        className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                          model === m 
+                            ? "bg-indigo-50 text-indigo-700" 
+                            : "hover:bg-slate-50 text-slate-700"
+                        }`}
+                      >
+                        {m}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-slate-400 italic">
+                      {availableModels.length === 0 
+                        ? "No models available for this brand" 
+                        : "No matching models found"}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
-            <Input
-              placeholder={`Enter the full model name (e.g., iPhone 15 Pro, Galaxy S24 Ultra)`}
-              value={customModel || model}
-              onChange={handleCustomModelChange}
-              disabled={!brand}
-              className="sleek-input h-12 text-base"
-            />
-            {availableModels.length > 0 && (
-              <button
-                onClick={() => onShowManualInput && onShowManualInput(false)}
-                className="text-sm text-indigo-600 hover:text-indigo-700"
-              >
-                ← Back to model list
-              </button>
-            )}
           </div>
-        ) : (
-          <>
-            <Select 
-              value={model && availableModels.includes(model) ? model : ""} 
-              onValueChange={handleModelChange} 
-              disabled={!brand}
-            >
-              <SelectTrigger className="sleek-input h-12 text-base">
-                <SelectValue placeholder={brand ? `Choose ${brand} model...` : "Choose model (select brand first)"} />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-gray-200">
-                {availableModels.map((modelName) => (
-                  <SelectItem key={modelName} value={modelName} className="text-base py-2.5 text-gray-700 hover:bg-gray-100">
-                    {modelName}
-                  </SelectItem>
-                ))}
-                <SelectItem value="custom" className="text-base py-2.5 font-medium text-indigo-600 hover:bg-gray-100">
-                  + Enter model manually
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </>
+        )}
+
+        {brand && availableModels.length > 0 && !showManualInput && (
+          <p className="text-xs text-slate-400 mt-1">
+            {availableModels.length} models available
+          </p>
         )}
       </div>
     </div>
