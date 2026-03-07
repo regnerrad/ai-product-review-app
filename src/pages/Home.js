@@ -89,6 +89,13 @@ export default function Home() {
     if (!stepData.brand || !stepData.model || !stepData.question) {
       return;
     }
+      // ADD THIS DEBUG LOG
+  console.log("Session check:", {
+    isAuthenticated,
+    sessionData,
+    requires_signup: sessionData?.requires_signup,
+    search_count: sessionData?.search_count
+  });
 
     if (!isAuthenticated && sessionData && sessionData.requires_signup) {
       setShowSignupPrompt(true);
@@ -256,7 +263,7 @@ export default function Home() {
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-                Why thousands trust ProductSense
+                Why thousands trust Findo
               </h2>
               <p className="text-xl text-slate-600 max-w-2xl mx-auto">
                 Skip the endless research. Get the answers you need in seconds.

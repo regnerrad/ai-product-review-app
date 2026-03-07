@@ -7,6 +7,10 @@ import Settings from './pages/Settings';
 import ManageAffiliate from './pages/ManageAffiliate';
 import Auth from './pages/Auth';
 import History from './pages/History';
+import AdminDashboard from './pages/AdminDashboard'
+
+// Add this route
+<Route path="/admin" element={<AdminDashboard />} />
 
 function App() {
   return (

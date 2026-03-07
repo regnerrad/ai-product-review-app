@@ -1,11 +1,44 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 
 export function Dialog({ children, open, onOpenChange }) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (dialogRef.current && !dialogRef.current.contains(event.target)) {
+        onOpenChange(false);
+      }
+    };
+
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape') {
+        onOpenChange(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener('mousedown', handleOutsideClick);
+      document.addEventListener('keydown', handleEscapeKey);
+      // Prevent body scroll when dialog is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscapeKey);
+      // Restore body scroll when dialog closes
+      document.body.style.overflow = 'unset';
+    };
+  }, [open, onOpenChange]);
+
   if (!open) return null;
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-in fade-in duration-200">
+      <div 
+        ref={dialogRef}
+        className="bg-white rounded-lg p-6 max-w-md w-full mx-4 animate-in slide-in-from-bottom-4 duration-300"
+      >
         {children}
       </div>
     </div>

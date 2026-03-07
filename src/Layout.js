@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { TrendingUp, ShoppingBag, Zap, User, LogOut, Settings as SettingsIcon } from "lucide-react";
+import { TrendingUp, ShoppingBag, Zap, User, LogOut, Settings as SettingsIcon, Sparkles } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { useAuth } from "./components/hooks/useAuth";
+import SignupPrompt from "./components/auth/SignupPrompt";
 
 // Simple dropdown components since dropdown-menu.js doesn't exist
 const DropdownMenu = ({ children }) => <div className="relative">{children}</div>;
@@ -31,10 +32,18 @@ const createPageUrl = (page) => {
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
+  
+  // State for signup prompt
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+  const [signupMode, setSignupMode] = useState('signin');
 
   const handleLogout = async () => {
     await logout();
     window.location.reload();
+  };
+
+  const handleSignupPromptClose = (allowOneMore = false) => {
+    setShowSignupPrompt(false);
   };
 
   return (
@@ -143,11 +152,11 @@ export default function Layout({ children, currentPageName }) {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to={createPageUrl("Home")} className="flex items-center gap-3 group">
-              <div className="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center">
+              <div className="w-9 h-9 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
                 <Zap className="w-5 h-5 text-white" />
               </div>
               <h1 className="text-xl font-bold text-slate-900">
-                ProductSense
+                Findo
               </h1>
             </Link>
 
@@ -172,14 +181,18 @@ export default function Layout({ children, currentPageName }) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center gap-2 text-slate-600 hover:text-slate-900 rounded-full p-1 transition-all duration-300">
-                      <div className="w-9 h-9 bg-slate-200 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-bold text-slate-700">
-                          {user?.full_name?.charAt(0) || 'U'}
+                      <div className="w-9 h-9 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full flex items-center justify-center border-2 border-indigo-200">
+                        <span className="text-sm font-bold text-indigo-700">
+                          {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                         </span>
                       </div>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white border-slate-200 shadow-xl rounded-xl w-56" align="end">
+                    <div className="px-4 py-3 border-b border-slate-100">
+                      <p className="text-sm font-medium text-slate-900">{user?.full_name || 'User'}</p>
+                      <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                    </div>
                     <DropdownMenuItem asChild>
                        <Link to={createPageUrl("History")} className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer flex items-center p-2 rounded-md">
                          <TrendingUp className="w-4 h-4 mr-3" />
@@ -210,12 +223,26 @@ export default function Layout({ children, currentPageName }) {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Link to="/auth">
-                  <Button className="sleek-button">
-                    <User className="w-4 h-4 mr-2" />
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setSignupMode('signin');
+                      setShowSignupPrompt(true);
+                    }}
+                    className="text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 px-5 py-2 rounded-lg transition-all font-medium"
+                  >
                     Sign In
-                  </Button>
-                </Link>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSignupMode('signup');
+                      setShowSignupPrompt(true);
+                    }}
+                    className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] font-medium"
+                  >
+                    Sign Up Free
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -230,17 +257,24 @@ export default function Layout({ children, currentPageName }) {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-3">
-               <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5 text-white" />
+               <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
               </div>
-              <span className="text-slate-600 font-medium">ProductSense</span>
+              <span className="text-slate-600 font-medium">Findo</span>
             </div>
             <div className="text-sm text-slate-500">
-              © {new Date().getFullYear()} • AI Product Research
+              © {new Date().getFullYear()} • AI-Powered Product Research
             </div>
           </div>
         </div>
       </footer>
+
+      {/* Signup Prompt Modal */}
+      <SignupPrompt 
+        isOpen={showSignupPrompt}
+        onClose={handleSignupPromptClose}
+        initialMode={signupMode}
+      />
     </div>
   );
 }
