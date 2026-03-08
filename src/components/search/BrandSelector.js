@@ -3,7 +3,8 @@ import { Label } from "../../components/ui/label";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { ChevronDown, Search, Plus, X } from "lucide-react";
-import { getModelsForBrand } from "../../data/models";
+import { getBrandsByCategory, getModelsByBrandAndCategory, getAllCategories } from "../../data/models";
+console.log("Available categories from data:", getAllCategories());
 
 export default function BrandSelector({ 
   category, 
@@ -19,26 +20,39 @@ export default function BrandSelector({
   const [showBrandDropdown, setShowBrandDropdown] = useState(false);
   const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [availableModels, setAvailableModels] = useState([]);
+  const [availableBrands, setAvailableBrands] = useState([]);
 
-  // Update available models when brand changes
+  // Debug: Log the category prop
   useEffect(() => {
-    if (brand) {
-      const models = getModelsForBrand(brand);
+    console.log("BrandSelector received category:", category);
+    console.log("All available categories:", getAllCategories());
+  }, [category]);
+
+  // Update available brands when category changes
+  useEffect(() => {
+    if (category) {
+      console.log("Getting brands for category:", category);
+      const brands = getBrandsByCategory(category);
+      console.log("Brands found:", brands);
+      setAvailableBrands(brands);
+    } else {
+      setAvailableBrands([]);
+    }
+  }, [category]);
+
+  // Update available models when brand and category change
+  useEffect(() => {
+    if (brand && category) {
+      console.log("Getting models for:", category, brand);
+      const models = getModelsByBrandAndCategory(category, brand);
+      console.log("Models found:", models);
       setAvailableModels(models);
     } else {
       setAvailableModels([]);
     }
-  }, [brand]);
+  }, [brand, category]);
 
-  // Mock brand list (you can expand this)
-  const popularBrands = [
-    "Apple", "Samsung", "Google", "OnePlus", "Xiaomi",
-    "Sony", "Bose", "Sennheiser", "Beats",
-    "Dell", "HP", "Lenovo", "ASUS", "Acer", "Microsoft",
-    "LG", "TCL", "Hisense"
-  ];
-
-  const filteredBrands = popularBrands.filter(b => 
+  const filteredBrands = availableBrands.filter(b => 
     b.toLowerCase().includes(brandSearch.toLowerCase())
   );
 
@@ -66,22 +80,30 @@ export default function BrandSelector({
         <Label className="text-base font-medium text-slate-700">Brand</Label>
         <div className="relative">
           <div
-            onClick={() => setShowBrandDropdown(!showBrandDropdown)}
-            className={`w-full px-4 py-3 bg-white border rounded-lg flex items-center justify-between transition-all duration-200 cursor-pointer ${
+            onClick={() => {
+              if (category) {
+                setShowBrandDropdown(!showBrandDropdown);
+              } else {
+                console.log("Cannot open brand dropdown: no category selected");
+              }
+            }}
+            className={`w-full px-4 py-3 bg-white border rounded-lg flex items-center justify-between transition-all duration-200 ${
+              !category ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+            } ${
               showBrandDropdown 
                 ? 'border-indigo-500 ring-2 ring-indigo-200' 
                 : 'border-slate-200 hover:border-indigo-200'
             }`}
           >
             <span className={brand ? "text-slate-900" : "text-slate-400"}>
-              {brand || "Select a brand"}
+              {brand || (category ? "Select a brand" : "Select a category first")}
             </span>
             <ChevronDown className={`w-4 h-4 text-slate-400 transition-all duration-200 ${
               showBrandDropdown ? "rotate-180 text-indigo-500" : ""
             }`} />
           </div>
 
-          {showBrandDropdown && (
+          {showBrandDropdown && category && (
             <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="p-2 border-b border-slate-100">
                 <div className="relative">
@@ -113,13 +135,18 @@ export default function BrandSelector({
                   ))
                 ) : (
                   <div className="px-3 py-2 text-sm text-slate-400 italic">
-                    No brands found
+                    No brands found for "{category}"
                   </div>
                 )}
               </div>
             </div>
           )}
         </div>
+        {category && availableBrands.length === 0 && (
+          <p className="text-xs text-amber-600 mt-1">
+            No brands available for "{category}". Please select a different category.
+          </p>
+        )}
       </div>
 
       {/* Model Selection */}
@@ -158,9 +185,13 @@ export default function BrandSelector({
         ) : (
           <div className="relative">
             <div
-              onClick={() => setShowModelDropdown(!showModelDropdown)}
+              onClick={() => {
+                if (brand) {
+                  setShowModelDropdown(!showModelDropdown);
+                }
+              }}
               className={`w-full px-4 py-3 bg-white border rounded-lg flex items-center justify-between transition-all duration-200 ${
-                !brand ? 'cursor-not-allowed' : 'cursor-pointer'
+                !brand ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
               } ${
                 showModelDropdown 
                   ? 'border-indigo-500 ring-2 ring-indigo-200' 
@@ -170,9 +201,11 @@ export default function BrandSelector({
               <span className={model ? "text-slate-900" : "text-slate-400"}>
                 {model || (brand ? "Select a model" : "Select a brand first")}
               </span>
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-all duration-200 ${
-                showModelDropdown ? "rotate-180 text-indigo-500" : ""
-              }`} />
+              {brand && (
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-all duration-200 ${
+                  showModelDropdown ? "rotate-180 text-indigo-500" : ""
+                }`} />
+              )}
             </div>
 
             {showModelDropdown && brand && (
@@ -207,9 +240,7 @@ export default function BrandSelector({
                     ))
                   ) : (
                     <div className="px-3 py-2 text-sm text-slate-400 italic">
-                      {availableModels.length === 0 
-                        ? "No models available for this brand" 
-                        : "No matching models found"}
+                      No models found for {brand} in {category}
                     </div>
                   )}
                 </div>
@@ -220,7 +251,7 @@ export default function BrandSelector({
 
         {brand && availableModels.length > 0 && !showManualInput && (
           <p className="text-xs text-slate-400 mt-1">
-            {availableModels.length} models available
+            {availableModels.length} models available in {category}
           </p>
         )}
       </div>

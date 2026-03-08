@@ -4,6 +4,9 @@ import { callOpenAI } from '../services/openaiService';
 import { saveProductSearchToSupabase, updateSearchWithResults } from "../services/productSearchService";
 import { Star, Check, X, ShoppingBag, TrendingUp, ArrowRight, ExternalLink, Shield, Users, Clock, Newspaper, Youtube, MessageCircle } from 'lucide-react';
 
+// Import tracking
+import { trackPageView, trackTimeOnPage, trackClick, trackPurchaseClick, trackReviewLinkClick, trackAlternativeClick } from '../services/trackingService';
+
 // New imports for enhanced features
 import ReviewLinks from '../components/results/ReviewLinks';
 import { getSmartAlternatives, getAllProducts } from '../services/smartMatchingService';
@@ -15,6 +18,20 @@ const Results = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [alternatives, setAlternatives] = useState([]);
+
+  // Track page view
+  useEffect(() => {
+    trackPageView('results_page');
+  }, []);
+
+  // Track time on page
+  useEffect(() => {
+    const startTime = Date.now();
+    return () => {
+      const timeSpent = Math.round((Date.now() - startTime) / 1000);
+      trackTimeOnPage('results_page', timeSpent);
+    };
+  }, []);
 
   // Extract parameters from both location.state and URL params
   const getSearchParams = () => {
@@ -183,6 +200,7 @@ const Results = () => {
             <Link
               to="/"
               className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+              onClick={() => trackClick('new_search_button', 'New Search', { fromPage: 'results' })}
             >
               <ArrowRight className="w-4 h-4 rotate-180" />
               New Search
@@ -350,6 +368,7 @@ const Results = () => {
                     href={option.url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackPurchaseClick(option.store, option.price, brand, model)}
                     className="block border border-slate-200 rounded-lg p-3 hover:border-indigo-300 hover:shadow-sm transition-all"
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -373,7 +392,11 @@ const Results = () => {
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">Similar Products</h3>
                 <div className="space-y-2">
                   {alternatives.map((alt, index) => (
-                    <div key={index} className="border border-slate-200 rounded-lg p-3">
+                    <div 
+                      key={index} 
+                      className="border border-slate-200 rounded-lg p-3 cursor-pointer hover:border-indigo-300 transition-colors"
+                      onClick={() => trackAlternativeClick(alt.brand, alt.model, alt.similarityScore)}
+                    >
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium text-slate-900 text-sm">{alt.brand}</span>
                         <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
@@ -389,12 +412,12 @@ const Results = () => {
           </div>
         </div>
 
-        {/* Review Links Section - Full width at bottom */}
+        {/* Review Links Section */}
         <div className="mt-6">
           <ReviewLinks brand={brand} model={model} />
         </div>
 
-        {/* Trust Badge - Subtle footer */}
+        {/* Trust Badge */}
         <div className="mt-6 text-center">
           <div className="inline-flex items-center gap-2 text-xs text-slate-400 bg-white px-4 py-2 rounded-full border border-slate-200">
             <Shield className="w-3 h-3" />

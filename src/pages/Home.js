@@ -13,6 +13,9 @@ import { useAuth } from "../components/hooks/useAuth";
 import { useSessionTracking } from "../components/hooks/useSessionTracking";
 import { STEPS, STEP_CONFIG } from "../config/steps";
 
+// Import tracking service
+import { trackPageView, trackTimeOnPage, trackClick } from "../services/trackingService";
+
 // Local createPageUrl function
 const createPageUrl = (page) => {
   const pages = {
@@ -42,6 +45,21 @@ export default function Home() {
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const [similarResults, setSimilarResults] = useState([]);
   const [showManualModelInput, setShowManualModelInput] = useState(false);
+
+  // Track page view when component mounts
+  useEffect(() => {
+    trackPageView('home_page');
+  }, []);
+
+  // Track time spent on page when component unmounts
+  useEffect(() => {
+    const startTime = Date.now();
+    
+    return () => {
+      const timeSpent = Math.round((Date.now() - startTime) / 1000);
+      trackTimeOnPage('home_page', timeSpent);
+    };
+  }, []);
 
   // Load suggestions on initial mount and when brand/model changes
   useEffect(() => {
@@ -86,16 +104,18 @@ export default function Home() {
   };
 
   const handleSearch = async () => {
+    // Track the search button click
+    trackClick('search_button', 'Get AI Insights', {
+      brand: stepData.brand,
+      model: stepData.model,
+      question: stepData.question,
+      category: stepData.category,
+      isAuthenticated
+    });
+
     if (!stepData.brand || !stepData.model || !stepData.question) {
       return;
     }
-      // ADD THIS DEBUG LOG
-  console.log("Session check:", {
-    isAuthenticated,
-    sessionData,
-    requires_signup: sessionData?.requires_signup,
-    search_count: sessionData?.search_count
-  });
 
     if (!isAuthenticated && sessionData && sessionData.requires_signup) {
       setShowSignupPrompt(true);
@@ -130,6 +150,12 @@ export default function Home() {
   };
 
   const handleUseSimilarResult = (result) => {
+    // Track suggestion click
+    trackClick('suggestion_click', result.user_question, {
+      brand: stepData.brand,
+      model: stepData.model
+    });
+    
     updateStepData("question", result.user_question);
   };
 
@@ -198,7 +224,12 @@ export default function Home() {
                   </div>
                   <CategoryFilter 
                     value={stepData.category}
-                    onChange={(value) => updateStepData("category", value)}
+                    onChange={(value) => {
+                      // Update category
+                      updateStepData("category", value);
+                      // Reset brand and model when category changes
+                      setStepData(prev => ({ ...prev, brand: "", model: "" }));
+                    }}
                   />
                 </div>
                 
@@ -263,7 +294,7 @@ export default function Home() {
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-                Why thousands trust Findo
+                Why thousands trust ProductSense
               </h2>
               <p className="text-xl text-slate-600 max-w-2xl mx-auto">
                 Skip the endless research. Get the answers you need in seconds.
