@@ -181,12 +181,6 @@ export default function Layout({ children, currentPageName }) {
                       <p className="text-sm font-medium text-slate-900">{user?.full_name || 'User'}</p>
                       <p className="text-xs text-slate-500 truncate">{user?.email}</p>
                     </div>
-                    <DropdownMenuItem asChild>
-                       <Link to={createPageUrl("History")} className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer flex items-center p-2 rounded-md">
-                         <TrendingUp className="w-4 h-4 mr-3" />
-                         My Searches
-                       </Link>
-                    </DropdownMenuItem>
                     {user?.role === 'admin' && (
                       <>
                         <DropdownMenuItem asChild>
