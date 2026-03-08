@@ -162,12 +162,6 @@ export default function Layout({ children, currentPageName }) {
 
             <div className="flex items-center gap-6">
               <nav className="hidden md:flex items-center gap-2 bg-slate-100 p-1 rounded-full">
-                <Link 
-                  to={createPageUrl("Home")}
-                  className={`nav-link ${location.pathname === createPageUrl("Home") ? 'active' : ''}`}
-                >
-                  Search
-                </Link>
               </nav>
 
               {/* User Menu */}
