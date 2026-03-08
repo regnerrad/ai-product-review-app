@@ -13,11 +13,11 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': window.location.origin, // Optional but recommended
-        'X-Title': 'Productsense App', // Optional
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'Productsense App',
       },
       body: JSON.stringify({
-        model: "openai/gpt-3.5-turbo", // You can change this to any OpenRouter model
+        model: "openai/gpt-3.5-turbo",
         messages: [
           { 
             role: "system", 
@@ -51,7 +51,34 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
                   "reason": "Why it's a good alternative",
                   "price_comparison": "Price comparison info"
                 }
-              ]
+              ],
+              "social_sentiment": {
+                "overall": 0.75,                     // number from -1 (very negative) to 1 (very positive)
+                "positive": 65,                       // percentage of positive mentions
+                "neutral": 20,                        // percentage of neutral mentions
+                "negative": 15,                        // percentage of negative mentions
+                "recent_trend": "rising",              // "rising", "falling", or "stable"
+                "top_mentions": [                      // array of 3 simulated social posts
+                  {
+                    "platform": "Twitter",
+                    "text": "Love my new Findo!",
+                    "sentiment": "positive",
+                    "likes": 234
+                  },
+                  {
+                    "platform": "Reddit",
+                    "text": "Battery life could be better.",
+                    "sentiment": "negative",
+                    "upvotes": 56
+                  },
+                  {
+                    "platform": "Facebook",
+                    "text": "Great value for money.",
+                    "sentiment": "positive",
+                    "likes": 89
+                  }
+                ]
+              }
             }
             
             IMPORTANT: Return ONLY the JSON object, no additional text, no explanations, no code blocks.`
@@ -104,7 +131,7 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
       console.error('Failed to parse JSON response:', parseError);
       console.log('Raw content that failed to parse:', data.choices[0].message.content);
       
-      // If not JSON, create structured response from text
+      // Fallback when JSON parsing fails – includes social_sentiment
       const content = data.choices[0].message.content;
       return {
         answer_to_question: content,
@@ -145,12 +172,24 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
             reason: "Competitive alternative with similar features",
             price_comparison: "Similar price range"
           }
-        ]
+        ],
+        social_sentiment: {
+          overall: 0.65,
+          positive: 60,
+          neutral: 25,
+          negative: 15,
+          recent_trend: 'stable',
+          top_mentions: [
+            { platform: "Twitter", text: "Really enjoying this product!", sentiment: "positive", likes: 123 },
+            { platform: "Reddit", text: "Worth the money.", sentiment: "positive", upvotes: 45 },
+            { platform: "Facebook", text: "Good but could be improved.", sentiment: "neutral", likes: 22 }
+          ]
+        }
       };
     }
   } catch (error) {
     console.error('OpenRouter call failed:', error);
-    // Return comprehensive mock data if API fails
+    // Comprehensive fallback if API call completely fails – includes social_sentiment
     return {
       answer_to_question: `Based on analysis, ${brand} ${model} is a solid choice${question ? ` for ${question.toLowerCase()}` : ''}.`,
       detailed_summary: `${brand} ${model} offers good value with competitive features in its category. It provides reliable performance and good build quality for its price range.`,
@@ -198,12 +237,24 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
           price_comparison: "Slightly higher at $399"
         },
         {
-          brand: brand, // Same brand
+          brand: brand,
           model: model + " Pro",
           reason: "Higher-end version with more features",
           price_comparison: "Premium version at $499"
         }
-      ]
+      ],
+      social_sentiment: {
+        overall: 0.7,
+        positive: 70,
+        neutral: 20,
+        negative: 10,
+        recent_trend: 'rising',
+        top_mentions: [
+          { platform: "Twitter", text: "Best purchase this year!", sentiment: "positive", likes: 345 },
+          { platform: "Reddit", text: "Battery life is amazing.", sentiment: "positive", upvotes: 89 },
+          { platform: "Facebook", text: "Customer service was helpful.", sentiment: "neutral", likes: 12 }
+        ]
+      }
     };
   }
 };

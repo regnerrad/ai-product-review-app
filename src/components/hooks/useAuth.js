@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getCurrentUser, signOut } from "../../services/authService";
+import { supabase } from "../../lib/supabase";
 
 export function useAuth() {
   const [user, setUser] = useState(null);
@@ -7,45 +7,31 @@ export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    checkAuthStatus();
+    // Get initial session (this will capture OAuth redirect tokens)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setIsAuthenticated(!!session?.user);
+      setIsLoading(false);
+    });
+
+    // Listen for auth changes (sign in, sign out, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setIsAuthenticated(!!session?.user);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const checkAuthStatus = async () => {
-    try {
-      const currentUser = await getCurrentUser();
-      if (currentUser) {
-        setUser(currentUser);
-        setIsAuthenticated(true);
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
-      console.error("Auth check error:", error);
-      setUser(null);
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const logout = async () => {
-    try {
-      await signOut();
-      setUser(null);
-      setIsAuthenticated(false);
-      return { success: true };
-    } catch (error) {
-      console.error("Logout error:", error);
-      return { success: false, error: error.message };
-    }
+    await supabase.auth.signOut();
   };
 
   return {
     user,
     isAuthenticated,
     isLoading,
-    logout,
-    refreshAuth: checkAuthStatus
+    logout
   };
 }

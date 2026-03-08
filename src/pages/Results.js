@@ -1,3 +1,4 @@
+import SocialSentiment from '../components/results/SocialSentiment';
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { callOpenAI } from '../services/openaiService';
@@ -100,7 +101,7 @@ const Results = () => {
     fetchAIInsights();
   }, [category, brand, model, question]);
 
-  // Fetch smart alternatives
+  // Fetch smart alternatives (still fetched but not displayed per your request)
   useEffect(() => {
     if (brand && model && modelsByBrand) {
       const allProducts = getAllProducts(modelsByBrand);
@@ -209,9 +210,9 @@ const Results = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        {/* Question & Direct Answer */}
-        <div className="sleek-card p-6 mb-6">
+      <div className="max-w-6xl mx-auto px-4 py-6 space-y-8">
+        {/* Row 1: Question (full width) */}
+        <div className="sleek-card p-6 border border-slate-200 rounded-xl bg-white">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <Users className="w-5 h-5" />
@@ -232,193 +233,180 @@ const Results = () => {
           </div>
         </div>
 
-        {/* Main Content - 2 columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Main Analysis */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Detailed Summary */}
-            <div className="sleek-card p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-3">Detailed Analysis</h3>
-              <p className="text-slate-700 leading-relaxed">
-                {insights.detailed_summary}
-              </p>
-            </div>
+        {/* Row 2: Detailed Analysis + Social Sentiment */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="sleek-card p-6 border border-slate-200 rounded-xl bg-white">
+            <h3 className="text-md font-semibold text-slate-900 mb-3">Detailed Analysis</h3>
+            <p className="text-slate-700 leading-relaxed">
+              {insights.detailed_summary}
+            </p>
+          </div>
+          <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
+            <SocialSentiment data={insights.social_sentiment} />
+          </div>
+        </div>
 
-            {/* Pros and Cons */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="sleek-card p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
-                    <Check className="w-4 h-4" />
+        {/* Row 3: Ratings + Where to Buy */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Ratings Card */}
+          <div className="sleek-card p-6 border border-slate-200 rounded-xl bg-white">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Ratings</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-1">
+                {renderStars(insights.rating_info.average_rating)}
+              </div>
+              <span className="text-2xl font-bold text-slate-900">
+                {insights.rating_info.average_rating.toFixed(1)}
+              </span>
+            </div>
+            <p className="text-sm text-slate-600 mb-4">
+              Based on {insights.rating_info.total_reviews.toLocaleString()} reviews
+            </p>
+            
+            {insights.rating_info.rating_breakdown && (
+              <div className="space-y-2">
+                {Object.entries(insights.rating_info.rating_breakdown).map(([stars, count]) => (
+                  <div key={stars} className="flex items-center gap-2 text-xs">
+                    <span className="text-slate-600 w-8">{stars}</span>
+                    <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-amber-400 rounded-full"
+                        style={{ width: `${(count / insights.rating_info.total_reviews) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-slate-600 w-12 text-right">
+                      {count}
+                    </span>
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Pros</h3>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Where to Buy Card */}
+          <div className="sleek-card p-6 border border-slate-200 rounded-xl bg-white">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
+                <ShoppingBag className="w-4 h-4" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900">Where to Buy</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {insights.purchase_options.map((option, index) => (
+                <a
+                  key={index}
+                  href={option.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackPurchaseClick(option.store, option.price, brand, model)}
+                  className="block border border-slate-200 rounded-lg p-3 hover:border-indigo-300 hover:shadow-sm transition-all"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-slate-900 text-sm">{option.store}</span>
+                    <ExternalLink className="w-3 h-3 text-slate-400" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900">{option.price}</span>
+                    <span className={`text-xs ${option.availability === 'In Stock' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {option.availability}
+                    </span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Row 4: Merged Pros & Cons + Alternative Options (full width) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Merged Pros & Cons Card */}
+          <div className="sleek-card p-6 border border-slate-200 rounded-xl bg-white">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Pros & Cons</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Pros Column */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3" />
+                  </div>
+                  <h4 className="font-medium text-slate-900">Pros</h4>
                 </div>
                 <ul className="space-y-2">
                   {insights.pros.map((pro, index) => (
                     <li key={index} className="flex items-start gap-2 text-sm">
-                      <div className="w-5 h-5 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Check className="w-3 h-3" />
-                      </div>
+                      <span className="w-4 h-4 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-2 h-2" />
+                      </span>
                       <span className="text-slate-700">{pro}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="sleek-card p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-red-100 text-red-600 rounded-lg flex items-center justify-center">
-                    <X className="w-4 h-4" />
+              {/* Cons Column */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
+                    <X className="w-3 h-3" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Cons</h3>
+                  <h4 className="font-medium text-slate-900">Cons</h4>
                 </div>
                 <ul className="space-y-2">
                   {insights.cons.map((con, index) => (
                     <li key={index} className="flex items-start gap-2 text-sm">
-                      <div className="w-5 h-5 bg-red-100 text-red-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <X className="w-3 h-3" />
-                      </div>
+                      <span className="w-4 h-4 bg-red-100 text-red-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <X className="w-2 h-2" />
+                      </span>
                       <span className="text-slate-700">{con}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
-
-            {/* AI Alternatives */}
-            {insights.alternatives && insights.alternatives.length > 0 && (
-              <div className="sleek-card p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center">
-                    <TrendingUp className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900">Alternative Options</h3>
-                </div>
-                <div className="space-y-3">
-                  {insights.alternatives.map((alt, index) => (
-                    <div key={index} className="border border-slate-200 rounded-lg p-3 hover:border-indigo-300 transition-colors">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="font-medium text-slate-900 text-sm">
-                            {alt.brand} {alt.model}
-                          </h4>
-                          <p className="text-slate-600 text-xs mt-1">{alt.reason}</p>
-                        </div>
-                        <span className="text-xs font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded-full">
-                          {alt.price_comparison}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Right Column - Sidebar */}
-          <div className="space-y-6">
-            {/* Rating Card */}
-            <div className="sleek-card p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Ratings</h3>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-1">
-                  {renderStars(insights.rating_info.average_rating)}
-                </div>
-                <span className="text-2xl font-bold text-slate-900">
-                  {insights.rating_info.average_rating.toFixed(1)}
-                </span>
-              </div>
-              <p className="text-sm text-slate-600 mb-4">
-                Based on {insights.rating_info.total_reviews.toLocaleString()} reviews
-              </p>
-              
-              {insights.rating_info.rating_breakdown && (
-                <div className="space-y-2">
-                  {Object.entries(insights.rating_info.rating_breakdown).map(([stars, count]) => (
-                    <div key={stars} className="flex items-center gap-2 text-xs">
-                      <span className="text-slate-600 w-8">{stars}</span>
-                      <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-amber-400 rounded-full"
-                          style={{ width: `${(count / insights.rating_info.total_reviews) * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-slate-600 w-12 text-right">
-                        {count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Purchase Options */}
-            <div className="sleek-card p-6">
+          {/* Alternative Options Card */}
+          {insights.alternatives && insights.alternatives.length > 0 ? (
+            <div className="sleek-card p-6 border border-slate-200 rounded-xl bg-white">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
-                  <ShoppingBag className="w-4 h-4" />
+                <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">Where to Buy</h3>
+                <h3 className="text-lg font-semibold text-slate-900">Alternatives</h3>
               </div>
-              
               <div className="space-y-3">
-                {insights.purchase_options.map((option, index) => (
-                  <a
-                    key={index}
-                    href={option.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => trackPurchaseClick(option.store, option.price, brand, model)}
-                    className="block border border-slate-200 rounded-lg p-3 hover:border-indigo-300 hover:shadow-sm transition-all"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-slate-900 text-sm">{option.store}</span>
-                      <ExternalLink className="w-3 h-3 text-slate-400" />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-900">{option.price}</span>
-                      <span className={`text-xs ${option.availability === 'In Stock' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                        {option.availability}
+                {insights.alternatives.map((alt, index) => (
+                  <div key={index} className="border border-slate-200 rounded-lg p-3 hover:border-indigo-300 transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-medium text-slate-900 text-sm">
+                          {alt.brand} {alt.model}
+                        </h4>
+                        <p className="text-slate-600 text-xs mt-1">{alt.reason}</p>
+                      </div>
+                      <span className="text-xs font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded-full">
+                        {alt.price_comparison}
                       </span>
                     </div>
-                  </a>
+                  </div>
                 ))}
               </div>
             </div>
-
-            {/* Smart Alternatives */}
-            {alternatives.length > 0 && (
-              <div className="sleek-card p-6">
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">Similar Products</h3>
-                <div className="space-y-2">
-                  {alternatives.map((alt, index) => (
-                    <div 
-                      key={index} 
-                      className="border border-slate-200 rounded-lg p-3 cursor-pointer hover:border-indigo-300 transition-colors"
-                      onClick={() => trackAlternativeClick(alt.brand, alt.model, alt.similarityScore)}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-slate-900 text-sm">{alt.brand}</span>
-                        <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
-                          {Math.round(alt.similarityScore * 100)}%
-                        </span>
-                      </div>
-                      <span className="text-xs text-slate-600">{alt.model}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          ) : (
+            <div className="sleek-card p-6 border border-slate-200 rounded-xl bg-white flex items-center justify-center text-slate-400">
+              No alternatives available
+            </div>
+          )}
         </div>
 
-        {/* Review Links Section */}
-        <div className="mt-6">
+        {/* Row 5: Expert Reviews (full width) */}
+        <div className="mt-8">
           <ReviewLinks brand={brand} model={model} />
         </div>
 
-        {/* Trust Badge */}
-        <div className="mt-6 text-center">
+        {/* Trust Badge (optional) */}
+        <div className="text-center">
           <div className="inline-flex items-center gap-2 text-xs text-slate-400 bg-white px-4 py-2 rounded-full border border-slate-200">
             <Shield className="w-3 h-3" />
             <span>AI analysis based on verified customer reviews</span>
