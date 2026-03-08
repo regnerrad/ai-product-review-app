@@ -168,12 +168,6 @@ export default function Layout({ children, currentPageName }) {
                 >
                   Search
                 </Link>
-                <Link 
-                  to={createPageUrl("History")}
-                  className={`nav-link ${location.pathname === createPageUrl("History") ? 'active' : ''}`}
-                >
-                  History
-                </Link>
               </nav>
 
               {/* User Menu */}
