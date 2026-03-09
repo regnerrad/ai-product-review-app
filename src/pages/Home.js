@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { Sparkles, TrendingUp, Shield, Users, Clock, ShoppingBag } from "lucide-react";
+import { Sparkles, TrendingUp, Shield, Users, Clock, ShoppingBag, MessageCircle} from "lucide-react";
 
 import BrandSelector from "../components/search/BrandSelector";
 import QuestionInput from "../components/search/QuestionInput";
@@ -180,7 +180,7 @@ export default function Home() {
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium mb-6">
                 <Sparkles className="w-4 h-4" />
-                AI-Powered Product Research
+                AI-Powered • Social Sentiment • Real Reviews
               </div>
               
               <h1 className="text-4xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
@@ -192,7 +192,7 @@ export default function Home() {
               </h1>
               
               <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-8">
-                Skip the endless research - get unbiased, AI-powered insights from thousands of reviews to find the perfect product for your needs.
+                Skip the endless research – get AI-powered insights from real social media conversations and thousands of reviews to find the perfect product for your needs.
               </p>
               
               {!isAuthenticated && (
@@ -297,7 +297,7 @@ export default function Home() {
                 Why thousands trust Findo
               </h2>
               <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                Skip the endless research. Get the answers you need in seconds.
+                Real insights from real people – from actual reviews and social conversations combined.
               </p>
             </div>
 
@@ -307,23 +307,23 @@ export default function Home() {
                   <TrendingUp className="w-6 h-6" />
                 </div>
                 <h3 className="font-semibold text-slate-900 mb-3 text-lg">Real insights, not marketing</h3>
-                <p className="text-slate-600">Our AI reads thousands of actual customer reviews to give you unbiased pros and cons specific to your question - not just the good ones.</p>
+                <p className="text-slate-600">Our AI reads thousands of actual customer reviews and social media conversations to give you unbiased pros and cons specific to your question - not just the good ones.</p>
               </div>
 
               <div className="sleek-card p-8 text-left">
                 <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-5">
                   <Shield className="w-6 h-6" />
                 </div>
-                <h3 className="font-semibold text-slate-900 mb-3 text-lg">Verified information only</h3>
-                <p className="text-slate-600">We analyze reviews from verified purchases and trusted sources, filtering out fake reviews and promotional content.</p>
+                <h3 className="font-semibold text-slate-900 mb-3 text-lg">Social media buzz</h3>
+                <p className="text-slate-600">We analyze real conversations on Twitter, Reddit, and more to give you the pulse of what people are actually saying – the good, the bad, and the hype.</p>
               </div>
 
               <div className="sleek-card p-8 text-left">
                 <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-5">
                   <ShoppingBag className="w-6 h-6" />
                 </div>
-                <h3 className="font-semibold text-slate-900 mb-3 text-lg">Best deals, automatically</h3>
-                <p className="text-slate-600">Find the best prices across multiple retailers without opening dozens of tabs or comparing manually.</p>
+                <h3 className="font-semibold text-slate-900 mb-3 text-lg">Verified information only</h3>
+                <p className="text-slate-600">We analyze reviews from verified purchases and trusted sources, filtering out fake reviews and promotional content.</p>
               </div>
             </div>
           </div>
