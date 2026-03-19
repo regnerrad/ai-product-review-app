@@ -1,32 +1,25 @@
 export const STEPS = [
-  'Category',
-  'Product',
-  'Question',
-  'Review'
+  { id: 1, title: "Category" },
+  { id: 2, title: "Product" },
+  { id: 3, title: "Question" },
+  { id: 4, title: "Review" }
 ];
 
 export const STEP_CONFIG = {
   1: {
-    title: 'Select Category',
-    description: 'Choose the type of product you\'re looking for',
-    placeholder: 'e.g., Laptop, Smartphone, Headphones',
-    field: 'category'
+    title: "Select Category",
+    description: "" // Empty description
   },
   2: {
-    title: 'Select Product',
-    description: 'Choose the brand and model of the product',
-    placeholder: '',
-    field: 'product'
+    title: "Select Product", 
+    description: "" // Empty description
   },
   3: {
-    title: 'Your Question',
-    description: 'What would you like to know about this product?',
-    placeholder: 'e.g., Is it good for gaming? Best for photography?',
-    field: 'question'
+    title: "Ask a Question",
+    description: "" // Empty description
   },
   4: {
-    title: 'Review & Submit',
-    description: 'Review your search criteria and submit',
-    field: 'review'
+    title: "Review Your Search",
+    description: "" // Empty description
   }
 };

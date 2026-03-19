@@ -1,15 +1,35 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY
+// Ensure these are strings and trimmed
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL?.trim() || ''
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY?.trim() || ''
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase credentials missing')
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true
+  },
+  // Add global error handler
+  global: {
+    fetch: (...args) => {
+      return fetch(...args).catch(err => {
+        console.warn('Supabase fetch error:', err)
+        // Return a fake response to prevent crashes
+        return new Response(JSON.stringify({ data: null, error: err.message }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      })
+    }
   }
 })
+
+// ... rest of your auth functions remain the same
 
 // Auth functions
 export const signUpWithEmail = async (email, password, fullName) => {

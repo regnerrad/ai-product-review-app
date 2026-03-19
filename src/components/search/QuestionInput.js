@@ -24,9 +24,6 @@ export default function QuestionInput({ value, onChange, brand, model }) {
 
   return (
     <div className="space-y-4">
-      <Label className="text-base font-medium text-slate-700 flex items-center gap-2">
-        4. Ask a question
-      </Label>
       {/* Guiding text for the user */}
       <p className="text-sm text-slate-500">
         Ask a specific question about {productName} to receive a tailored review focusing on what matters to you.

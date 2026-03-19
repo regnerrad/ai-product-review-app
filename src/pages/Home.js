@@ -104,50 +104,66 @@ export default function Home() {
   };
 
   const handleSearch = async () => {
-    // Track the search button click
-    trackClick('search_button', 'Get AI Insights', {
+    // Scroll to top immediately when search starts
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Track the search button click
+  trackClick('search_button', 'Get AI Insights', {
+    brand: stepData.brand,
+    model: stepData.model,
+    question: stepData.question,
+    category: stepData.category,
+    isAuthenticated
+  });
+
+  if (!stepData.brand || !stepData.model || !stepData.question) {
+    return;
+  }
+
+  if (!isAuthenticated && sessionData && sessionData.requires_signup) {
+    setShowSignupPrompt(true);
+    return;
+  }
+
+  setIsSearching(true);
+
+  let searchId = null;
+  let savedSearch = null;
+  
+  try {
+    savedSearch = await saveProductSearchToSupabase({
       brand: stepData.brand,
       model: stepData.model,
-      question: stepData.question,
       category: stepData.category,
-      isAuthenticated
+      user_question: stepData.question,
+      user_id: user?.id || null
     });
-
-    if (!stepData.brand || !stepData.model || !stepData.question) {
-      return;
-    }
-
-    if (!isAuthenticated && sessionData && sessionData.requires_signup) {
-      setShowSignupPrompt(true);
-      return;
-    }
-
-    setIsSearching(true);
-
-    let searchId = null;
     
-    try {
-      searchId = await saveProductSearchToSupabase({
-        brand: stepData.brand,
-        model: stepData.model,
-        category: stepData.category,
-        user_question: stepData.question,
-        user_id: user?.id || null
-      });
-    } catch (error) {
-      console.error("Failed to save search:", error);
-    }
-    
-    navigate("/results", {
-      state: {
-        brand: stepData.brand,
-        model: stepData.model,
-        category: stepData.category,
-        question: stepData.question,
-        searchId: searchId
+    // CRITICAL FIX: Extract only the ID string
+    if (savedSearch) {
+      if (typeof savedSearch === 'string') {
+        searchId = savedSearch;
+      } else if (savedSearch.id) {
+        searchId = savedSearch.id;
+      } else if (savedSearch.searchId) {
+        searchId = savedSearch.searchId;
       }
-    });
-  };
+      console.log('Search saved with ID:', searchId);
+    }
+  } catch (error) {
+    console.error("Failed to save search:", error);
+  }
+  
+  // Navigate with ONLY the ID string, not the whole object
+  navigate("/results", {
+    state: {
+      brand: stepData.brand,
+      model: stepData.model,
+      category: stepData.category,
+      question: stepData.question,
+      searchId: searchId // This must be a string, not an object
+    }
+  });
+};
 
   const handleUseSimilarResult = (result) => {
     // Track suggestion click
@@ -219,8 +235,10 @@ export default function Home() {
                 {/* Step 1: Category */}
                 <div className={`step-section ${activeStep >= 1 ? 'active' : ''}`}>
                   <div className="mb-4">
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">{STEP_CONFIG[1].title}</h3>
-                    <p className="text-slate-600">{STEP_CONFIG[1].description}</p>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">
+                      <span className="text-indigo-500 mr-2">Step 1:</span>
+                      {STEP_CONFIG[1].title}
+                    </h3>
                   </div>
                   <CategoryFilter 
                     value={stepData.category}
@@ -236,8 +254,13 @@ export default function Home() {
                 {/* Step 2: Product */}
                 <div className={`step-section ${activeStep >= 2 ? 'active' : ''}`}>
                   <div className="mb-4">
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">{STEP_CONFIG[2].title}</h3>
-                    <p className="text-slate-600">{STEP_CONFIG[2].description}</p>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">
+                      <span className="text-indigo-500 mr-2">Step 2:</span>
+                      {STEP_CONFIG[2].title}
+                    </h3>
+                    {STEP_CONFIG[2].description && (
+                      <p className="text-slate-600">{STEP_CONFIG[2].description}</p>
+                    )}
                   </div>
                   <BrandSelector
                     category={stepData.category}
@@ -253,8 +276,13 @@ export default function Home() {
                 {/* Step 3: Question */}
                 <div className={`step-section ${activeStep >= 3 ? 'active' : ''}`}>
                   <div className="mb-4">
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">{STEP_CONFIG[3].title}</h3>
-                    <p className="text-slate-600">{STEP_CONFIG[3].description}</p>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">
+                      <span className="text-indigo-500 mr-2">Step 3:</span>
+                      {STEP_CONFIG[3].title}
+                    </h3>
+                    {STEP_CONFIG[3].description && (
+                      <p className="text-slate-600">{STEP_CONFIG[3].description}</p>
+                    )}
                   </div>
                   <QuestionInput
                     value={stepData.question}

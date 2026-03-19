@@ -71,7 +71,7 @@ export default function Layout({ children, currentPageName }) {
       <style>{/* ... keep your existing styles ... */}</style>
 
       {/* Header */}
-      <header className="light-header sticky top-0 z-50">
+      <header className="light-header">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to={createPageUrl("Home")} className="flex items-center gap-3 group">

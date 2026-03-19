@@ -19,9 +19,6 @@ const categories = [
 export default function CategoryFilter({ value, onChange }) {
   return (
     <div className="space-y-4">
-      <Label className="text-base font-medium text-slate-700">
-        1. Select a category
-      </Label>
       <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
         {categories.map((category) => {
           const Icon = category.icon;
