@@ -105,7 +105,7 @@ export default function Home() {
 
   const handleSearch = async () => {
     // Scroll to top immediately when search starts
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'instant' });
   // Track the search button click
   trackClick('search_button', 'Get AI Insights', {
     brand: stepData.brand,

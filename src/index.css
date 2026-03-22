@@ -57,3 +57,34 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Prevent zoom on focus for select and input elements */
+select, input, textarea, button {
+  font-size: 16px !important;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* For iOS specifically to prevent zoom */
+@media screen and (-webkit-min-device-pixel-ratio: 0) { 
+  select:focus,
+  textarea:focus,
+  input:focus {
+    font-size: 16px;
+    transform: scale(1);
+  }
+}
+
+/* Prevent zoom on select dropdowns */
+select {
+  font-size: 16px !important;
+}
+
+/* Ensure form controls don't zoom on focus in mobile browsers */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea,
+select {
+  font-size: 16px !important;
+}
