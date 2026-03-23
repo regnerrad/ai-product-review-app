@@ -3,13 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { callOpenAI } from '../services/openaiService';
 import { saveProductSearchToSupabase, updateSearchWithResults } from "../services/productSearchService";
-import { Star, Check, X, ShoppingBag, TrendingUp, ArrowRight, ExternalLink, Shield, Users, Clock, Newspaper, Youtube, MessageCircle } from 'lucide-react';
+import { Star, Check, X, ShoppingBag, TrendingUp, ArrowRight, ExternalLink, Shield, Users, Clock, Newspaper, Youtube, MessageCircle, Sparkles } from 'lucide-react';
 
 // Import tracking
 import { trackPageView, trackTimeOnPage, trackClick, trackPurchaseClick, trackReviewLinkClick, trackAlternativeClick } from '../services/trackingService';
 
 // New imports for enhanced features
 import ReviewLinks from '../components/results/ReviewLinks';
+import RedditInsights from '../components/results/RedditInsights';
 import { getSmartAlternatives, getAllProducts } from '../services/smartMatchingService';
 import { modelsByBrand } from '../data/models';
 
@@ -85,12 +86,10 @@ const Results = () => {
             if (typeof searchId === 'string') {
               idToUse = searchId;
             } else if (typeof searchId === 'object' && searchId !== null) {
-              // If it's an object, try to get the id property
               idToUse = searchId.id || searchId.searchId;
               console.log('Extracted ID from object:', idToUse);
             }
             
-            // Only update if we have a valid string ID that's not an object string
             if (idToUse && typeof idToUse === 'string' && 
                 !idToUse.includes('{') && !idToUse.includes('[') && 
                 !idToUse.startsWith('temp_')) {
@@ -115,7 +114,6 @@ const Results = () => {
           }
         } catch (saveError) {
           console.error("Failed to save search with results:", saveError);
-          // Don't fail the whole request if save fails
         }
       } catch (err) {
         console.error('Error fetching AI insights:', err);
@@ -216,7 +214,7 @@ const Results = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Header */}
-      <div className="border-b border-slate-200 bg-white">
+      <div className="border-b border-slate-200 bg-white sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -262,12 +260,35 @@ const Results = () => {
 
         {/* Row 2: Detailed Analysis + Social Sentiment */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="sleek-card p-6 border border-slate-200 rounded-xl bg-white">
-            <h3 className="text-md font-semibold text-slate-900 mb-3">Detailed Analysis</h3>
-            <p className="text-slate-700 leading-relaxed">
-              {insights.detailed_summary}
-            </p>
+          {/* Detailed Analysis Card */}
+          <div className="sleek-card border border-slate-200 rounded-xl bg-white overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-indigo-500" />
+                Detailed Analysis
+              </h3>
+              
+              {/* Product Analysis Section */}
+              <div className="mb-6 pb-6 border-b border-slate-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-3 h-3" />
+                  </div>
+                  <h4 className="font-medium text-slate-800">Product Analysis</h4>
+                </div>
+                <p className="text-slate-700 leading-relaxed">
+                  {insights.detailed_summary}
+                </p>
+              </div>
+              
+              {/* Reddit Insights Section */}
+              <div>
+                <RedditInsights data={insights.social_sentiment} />
+              </div>
+            </div>
           </div>
+
+          {/* Social Sentiment Card */}
           <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
             <SocialSentiment data={insights.social_sentiment} />
           </div>
@@ -436,7 +457,7 @@ const Results = () => {
         <div className="text-center">
           <div className="inline-flex items-center gap-2 text-xs text-slate-400 bg-white px-4 py-2 rounded-full border border-slate-200">
             <Shield className="w-3 h-3" />
-            <span>AI analysis based on verified customer reviews</span>
+            <span>AI analysis based on verified customer reviews and Reddit community discussions</span>
           </div>
         </div>
       </div>

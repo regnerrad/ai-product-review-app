@@ -1,11 +1,32 @@
+import { getRedditSentiment } from './redditService';
+
 export const callOpenAI = async ({ brand, model, question, category }) => {
   try {
-    const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY;
+    // Fetch real Reddit sentiment data
+    console.log(`Fetching Reddit sentiment for ${brand} ${model}...`);
+    const redditSentiment = await getRedditSentiment(brand, model);
+    console.log('Reddit sentiment:', redditSentiment);
+    
+    const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY?.trim();
     
     if (!OPENROUTER_API_KEY) {
-      throw new Error('OpenRouter API key is not configured');
+      console.warn('OpenRouter API key is not configured, using mock data with real Reddit sentiment');
+      return getMockResponse(brand, model, question, category, redditSentiment);
     }
 
+    // Prepare Reddit context
+    const redditContext = redditSentiment && redditSentiment.total_posts_analyzed > 0
+      ? `\n\n=== REAL REDDIT COMMUNITY DATA ===\n` +
+        `- Total Discussions: ${redditSentiment.total_posts_analyzed} Reddit posts analyzed\n` +
+        `- Community Sentiment: ${redditSentiment.positive}% positive, ${redditSentiment.neutral}% neutral, ${redditSentiment.negative}% negative\n` +
+        `- Overall Sentiment Score: ${redditSentiment.overall_percentage}% positive\n` +
+        `- Trend: ${redditSentiment.recent_trend}\n` +
+        `- Top Discussions:\n` +
+        redditSentiment.top_mentions.map(m => 
+          `  • "${m.text.substring(0, 100)}" (r/${m.subreddit}, ${m.score} upvotes)`
+        ).join('\n')
+      : '\n\n(No Reddit discussions found for this product.)';
+    
     console.log('Calling OpenRouter API for:', { brand, model, question, category });
     
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -13,8 +34,8 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'Productsense App',
+        'HTTP-Referer': window.location.origin || 'https://findoapp.co',
+        'X-Title': 'Findo App',
       },
       body: JSON.stringify({
         model: "openai/gpt-3.5-turbo",
@@ -24,13 +45,26 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
             content: `You are a product expert analyzing ${brand} ${model}${category ? ` in the ${category} category` : ''}. 
             Provide comprehensive product analysis based on the user's question.
             
+            ${redditContext}
+            
+            === CRITICAL FORMATTING INSTRUCTIONS ===
+            Your response MUST have the "detailed_summary" field formatted EXACTLY like this:
+            
+            [Write 2-3 sentences about the product based on general knowledge, features, and specifications.]
+            
+            Then add a new paragraph with Reddit insights.
+            
+            IMPORTANT: 
+            - Keep product analysis separate from Reddit insights
+            - Don't use markdown formatting in the JSON string
+            
             ALWAYS respond with a valid JSON object matching this EXACT structure:
             {
               "answer_to_question": "Direct answer to the user's question",
-              "detailed_summary": "Detailed analysis and summary",
+              "detailed_summary": "Product analysis text here. Then a new paragraph with Reddit insights here.",
               "rating_info": {
                 "average_rating": 4.5,
-                "total_reviews": 1000,
+                "total_reviews": ${redditSentiment?.total_posts_analyzed || 1000},
                 "rating_breakdown": {}
               },
               "pros": ["Pro 1", "Pro 2", "Pro 3"],
@@ -53,31 +87,13 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
                 }
               ],
               "social_sentiment": {
-                "overall": 0.75,                     // number from -1 (very negative) to 1 (very positive)
-                "positive": 65,                       // percentage of positive mentions
-                "neutral": 20,                        // percentage of neutral mentions
-                "negative": 15,                        // percentage of negative mentions
-                "recent_trend": "rising",              // "rising", "falling", or "stable"
-                "top_mentions": [                      // array of 3 simulated social posts
-                  {
-                    "platform": "Twitter",
-                    "text": "Love my new Findo!",
-                    "sentiment": "positive",
-                    "likes": 234
-                  },
-                  {
-                    "platform": "Reddit",
-                    "text": "Battery life could be better.",
-                    "sentiment": "negative",
-                    "upvotes": 56
-                  },
-                  {
-                    "platform": "Facebook",
-                    "text": "Great value for money.",
-                    "sentiment": "positive",
-                    "likes": 89
-                  }
-                ]
+                "overall": ${(redditSentiment?.overall_percentage || 50) / 100},
+                "positive": ${redditSentiment?.positive || 65},
+                "neutral": ${redditSentiment?.neutral || 20},
+                "negative": ${redditSentiment?.negative || 15},
+                "recent_trend": "${redditSentiment?.recent_trend || 'stable'}",
+                "total_posts_analyzed": ${redditSentiment?.total_posts_analyzed || 0},
+                "top_mentions": ${JSON.stringify(redditSentiment?.top_mentions || [])}
               }
             }
             
@@ -85,176 +101,194 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
           },
           { 
             role: "user", 
-            content: `Analyze ${brand} ${model}. Question: ${question}`
+            content: `Analyze ${brand} ${model}. User's specific question: ${question}`
           }
         ],
         temperature: 0.7,
-        max_tokens: 1000,
+        max_tokens: 1500,
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenRouter API error:', response.status, errorText);
+      
+      if (response.status === 429 || response.status === 402) {
+        console.warn('API rate limit reached, using mock data with real Reddit sentiment');
+        return getMockResponse(brand, model, question, category, redditSentiment);
+      }
+      
       throw new Error(`OpenRouter API error: ${response.status}`);
     }
 
     const data = await response.json();
     console.log('OpenRouter API response received');
     
-    // Parse JSON from OpenRouter response
     try {
       const content = data.choices[0].message.content;
-      console.log('Raw AI response:', content);
+      console.log('Raw AI response received, length:', content.length);
       
-      // Clean the content - remove any markdown code blocks
+      // Clean the content - remove any markdown code blocks and extract JSON
       let cleanContent = content.trim();
-      if (cleanContent.startsWith('```json')) {
-        cleanContent = cleanContent.substring(7);
-      }
-      if (cleanContent.startsWith('```')) {
-        cleanContent = cleanContent.substring(3);
-      }
-      if (cleanContent.endsWith('```')) {
-        cleanContent = cleanContent.substring(0, cleanContent.length - 3);
-      }
-      cleanContent = cleanContent.trim();
       
-      console.log('Cleaned content:', cleanContent);
+      // Remove markdown code blocks
+      if (cleanContent.includes('```json')) {
+        cleanContent = cleanContent.split('```json')[1].split('```')[0].trim();
+      } else if (cleanContent.includes('```')) {
+        cleanContent = cleanContent.split('```')[1].split('```')[0].trim();
+      }
+      
+      // Try to find JSON object in the text if it's not pure JSON
+      if (!cleanContent.startsWith('{')) {
+        const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          cleanContent = jsonMatch[0];
+        }
+      }
+      
+      console.log('Cleaned content length:', cleanContent.length);
       
       // Parse the JSON
       const parsedResponse = JSON.parse(cleanContent);
       console.log('Successfully parsed JSON response');
       
+      // Ensure social_sentiment is properly structured
+      if (!parsedResponse.social_sentiment || typeof parsedResponse.social_sentiment !== 'object') {
+        parsedResponse.social_sentiment = redditSentiment || {
+          overall: 0.65,
+          positive: 65,
+          neutral: 20,
+          negative: 15,
+          recent_trend: 'stable',
+          total_posts_analyzed: 0,
+          top_mentions: []
+        };
+      }
+      
       return parsedResponse;
     } catch (parseError) {
       console.error('Failed to parse JSON response:', parseError);
-      console.log('Raw content that failed to parse:', data.choices[0].message.content);
+      console.error('Raw content that failed:', data.choices[0].message.content);
       
-      // Fallback when JSON parsing fails – includes social_sentiment
-      const content = data.choices[0].message.content;
-      return {
-        answer_to_question: content,
-        detailed_summary: content.length > 200 ? content.substring(0, 200) + '...' : content,
-        rating_info: { 
-          average_rating: 4.2, 
-          total_reviews: 1000,
-          rating_breakdown: {
-            "5 stars": 600,
-            "4 stars": 300,
-            "3 stars": 80,
-            "2 stars": 15,
-            "1 star": 5
-          }
-        },
-        pros: ["Good value for money", "Reliable performance", "Quality brand"],
-        cons: ["Could have better battery life", "Limited availability in some regions"],
-        purchase_options: [
-          {
-            store: "Shopee",
-            price: "$299-$499",
-            availability: "Check store",
-            url: `https://shopee.sg/search?keyword=${encodeURIComponent(brand + ' ' + model)}`,
-            is_shopee: true
-          },
-          {
-            store: "Amazon",
-            price: "$349",
-            availability: "In Stock",
-            url: `https://www.amazon.com/s?k=${encodeURIComponent(brand + ' ' + model)}`,
-            is_shopee: false
-          }
-        ],
-        alternatives: [
-          {
-            brand: "Similar Brand",
-            model: "Alternative Model",
-            reason: "Competitive alternative with similar features",
-            price_comparison: "Similar price range"
-          }
-        ],
-        social_sentiment: {
-          overall: 0.65,
-          positive: 60,
-          neutral: 25,
-          negative: 15,
-          recent_trend: 'stable',
-          top_mentions: [
-            { platform: "Twitter", text: "Really enjoying this product!", sentiment: "positive", likes: 123 },
-            { platform: "Reddit", text: "Worth the money.", sentiment: "positive", upvotes: 45 },
-            { platform: "Facebook", text: "Good but could be improved.", sentiment: "neutral", likes: 22 }
-          ]
-        }
-      };
+      // Return mock response with real Reddit data
+      return getMockResponse(brand, model, question, category, redditSentiment);
     }
   } catch (error) {
     console.error('OpenRouter call failed:', error);
-    // Comprehensive fallback if API call completely fails – includes social_sentiment
-    return {
-      answer_to_question: `Based on analysis, ${brand} ${model} is a solid choice${question ? ` for ${question.toLowerCase()}` : ''}.`,
-      detailed_summary: `${brand} ${model} offers good value with competitive features in its category. It provides reliable performance and good build quality for its price range.`,
-      rating_info: { 
-        average_rating: 4.2, 
-        total_reviews: 1000,
-        rating_breakdown: {
-          "5 stars": 600,
-          "4 stars": 300,
-          "3 stars": 80,
-          "2 stars": 15,
-          "1 star": 5
-        }
-      },
-      pros: ["Good performance", "Reliable brand", "Competitive pricing", "Good customer support"],
-      cons: ["Could have better battery life", "Limited color options", "May lack some premium features"],
-      purchase_options: [
-        {
-          store: "Shopee",
-          price: "$299-$399",
-          availability: "In Stock",
-          url: `https://shopee.sg/search?keyword=${encodeURIComponent(brand + ' ' + model)}`,
-          is_shopee: true
-        },
-        {
-          store: "Amazon",
-          price: "$349",
-          availability: "In Stock",
-          url: `https://www.amazon.com/s?k=${encodeURIComponent(brand + ' ' + model)}`,
-          is_shopee: false
-        },
-        {
-          store: "Best Buy",
-          price: "$329",
-          availability: "Check local store",
-          url: `https://www.bestbuy.com/site/searchpage.jsp?st=${encodeURIComponent(brand + ' ' + model)}`,
-          is_shopee: false
-        }
-      ],
-      alternatives: [
-        {
-          brand: "Alternative Brand",
-          model: "Model X",
-          reason: "Better battery life and camera",
-          price_comparison: "Slightly higher at $399"
-        },
-        {
-          brand: brand,
-          model: model + " Pro",
-          reason: "Higher-end version with more features",
-          price_comparison: "Premium version at $499"
-        }
-      ],
-      social_sentiment: {
-        overall: 0.7,
-        positive: 70,
-        neutral: 20,
-        negative: 10,
-        recent_trend: 'rising',
-        top_mentions: [
-          { platform: "Twitter", text: "Best purchase this year!", sentiment: "positive", likes: 345 },
-          { platform: "Reddit", text: "Battery life is amazing.", sentiment: "positive", upvotes: 89 },
-          { platform: "Facebook", text: "Customer service was helpful.", sentiment: "neutral", likes: 12 }
-        ]
-      }
-    };
+    const redditSentiment = await getRedditSentiment(brand, model);
+    return getMockResponse(brand, model, question, category, redditSentiment);
   }
+};
+
+// Mock response function with real Reddit sentiment data
+const getMockResponse = (brand, model, question, category, redditSentiment) => {
+  const questionLower = question?.toLowerCase() || '';
+  let keyPhrase = 'overall satisfaction';
+  
+  if (questionLower.includes('battery')) keyPhrase = 'battery life';
+  else if (questionLower.includes('camera')) keyPhrase = 'camera quality';
+  else if (questionLower.includes('price') || questionLower.includes('worth')) keyPhrase = 'value for money';
+  else if (questionLower.includes('performance') || questionLower.includes('speed')) keyPhrase = 'performance';
+  else if (questionLower.includes('screen') || questionLower.includes('display')) keyPhrase = 'display quality';
+  else if (questionLower.includes('durable') || questionLower.includes('build')) keyPhrase = 'build quality';
+
+  // Use real Reddit sentiment data if available
+  const sentimentData = redditSentiment || {
+    overall: 0.65,
+    overall_percentage: 65,
+    positive: 65,
+    neutral: 20,
+    negative: 15,
+    recent_trend: 'stable',
+    top_mentions: [],
+    total_posts_analyzed: 0
+  };
+
+  // Build detailed summary
+  let productAnalysis = `${brand} ${model} is a well-regarded product in the ${category || 'product'} category. `;
+  productAnalysis += `Regarding ${keyPhrase}, the device delivers solid performance with good reliability and build quality. `;
+  productAnalysis += `The features are competitive within its segment, offering good value for the price point.`;
+  
+  let redditInsights = '';
+  if (sentimentData.total_posts_analyzed > 0) {
+    const subreddits = [...new Set(sentimentData.top_mentions.map(m => m.subreddit))];
+    redditInsights = ` Based on ${sentimentData.total_posts_analyzed} Reddit discussions across r/${subreddits.slice(0, 3).join(', r/')}, ${sentimentData.positive}% of posts are positive, ${sentimentData.negative}% express concerns. Community sentiment is ${sentimentData.recent_trend}.`;
+  } else {
+    redditInsights = ` No Reddit discussions found for this product yet.`;
+  }
+
+  const detailedSummary = productAnalysis + redditInsights;
+
+  return {
+    answer_to_question: `Based on general product analysis${sentimentData.total_posts_analyzed > 0 ? ` and ${sentimentData.total_posts_analyzed} Reddit discussions` : ''}, the ${brand} ${model} is a solid choice for ${keyPhrase}.`,
+    detailed_summary: detailedSummary,
+    rating_info: { 
+      average_rating: sentimentData.total_posts_analyzed > 0 ? 3.5 + (sentimentData.overall_percentage / 100) : 4.2, 
+      total_reviews: sentimentData.total_posts_analyzed || 847,
+      rating_breakdown: {
+        "5": Math.round(sentimentData.positive * 0.6),
+        "4": Math.round(sentimentData.positive * 0.3),
+        "3": Math.round(sentimentData.neutral),
+        "2": Math.round(sentimentData.negative * 0.6),
+        "1": Math.round(sentimentData.negative * 0.4)
+      }
+    },
+    pros: [
+      `Good ${keyPhrase}`,
+      "Reliable performance",
+      "Quality build",
+      "Competitive pricing"
+    ],
+    cons: [
+      "Could have better battery life",
+      "Limited color options",
+      "Premium price point"
+    ],
+    purchase_options: [
+      {
+        store: "Shopee",
+        price: "$299-$399",
+        availability: "In Stock",
+        url: `https://shopee.sg/search?keyword=${encodeURIComponent(brand + ' ' + model)}`,
+        is_shopee: true
+      },
+      {
+        store: "Amazon",
+        price: "$349",
+        availability: "In Stock",
+        url: `https://www.amazon.com/s?k=${encodeURIComponent(brand + ' ' + model)}`,
+        is_shopee: false
+      },
+      {
+        store: "Lazada",
+        price: "$329",
+        availability: "In Stock",
+        url: `https://www.lazada.sg/catalog/?q=${encodeURIComponent(brand + ' ' + model)}`,
+        is_shopee: false
+      }
+    ],
+    alternatives: [
+      {
+        brand: brand === "Apple" ? "Samsung" : "Apple",
+        model: brand === "Apple" ? "Galaxy S25" : "iPhone 16",
+        reason: `Strong competitor with similar features`,
+        price_comparison: "Similar price range"
+      },
+      {
+        brand: brand,
+        model: model + " Pro",
+        reason: "Higher-end version with more features",
+        price_comparison: "Premium version, ~$100 more"
+      }
+    ],
+    social_sentiment: {
+      overall: sentimentData.overall_percentage / 100,
+      positive: sentimentData.positive,
+      neutral: sentimentData.neutral,
+      negative: sentimentData.negative,
+      recent_trend: sentimentData.recent_trend,
+      total_posts_analyzed: sentimentData.total_posts_analyzed,
+      top_mentions: sentimentData.top_mentions.length > 0 ? sentimentData.top_mentions : []
+    }
+  };
 };
