@@ -1,6 +1,82 @@
 import { getRedditSentiment } from './redditService';
 import { getYouTubeSentiment } from './youtubeService';
 
+// Combine Reddit and YouTube sentiment data
+const combineSentimentData = (reddit, youtube) => {
+  const redditData = reddit || { positive: 0, neutral: 0, negative: 0, total_posts_analyzed: 0, top_mentions: [], recent_trend: 'stable', overall_percentage: 50 };
+  const youtubeData = youtube || { positive: 0, neutral: 0, negative: 0, total_comments_analyzed: 0, top_mentions: [], recent_trend: 'stable', overall_percentage: 50 };
+  
+  const totalPosts = redditData.total_posts_analyzed || 0;
+  const totalComments = youtubeData.total_comments_analyzed || 0;
+  const combinedTotal = totalPosts + totalComments;
+  
+  if (combinedTotal === 0) {
+    return {
+      overall: 0,
+      overall_percentage: 50,
+      positive: 0,
+      neutral: 0,
+      negative: 0,
+      recent_trend: 'stable',
+      top_mentions: [],
+      combined_total: 0,
+      reddit_posts: 0,
+      youtube_comments: 0
+    };
+  }
+  
+  // Weighted average based on volume
+  const positive = (redditData.positive * totalPosts + youtubeData.positive * totalComments) / combinedTotal;
+  const neutral = (redditData.neutral * totalPosts + youtubeData.neutral * totalComments) / combinedTotal;
+  const negative = (redditData.negative * totalPosts + youtubeData.negative * totalComments) / combinedTotal;
+  
+  // Overall sentiment score (-1 to 1 scale)
+  const overall = (positive - negative) / 100;
+  const overall_percentage = Math.round(((overall + 1) / 2) * 100);
+  
+  // Combine top mentions (take top 3 from both)
+  const allMentions = [
+    ...(redditData.top_mentions || []).map(m => ({ 
+      ...m, 
+      platform: 'Reddit',
+      likes: m.score,
+      text: m.text
+    })),
+    ...(youtubeData.top_mentions || []).map(m => ({ 
+      ...m, 
+      platform: 'YouTube',
+      text: m.text
+    }))
+  ];
+  
+  // Sort by engagement (likes/score) and take top 3
+  allMentions.sort((a, b) => (b.likes || b.score || 0) - (a.likes || a.score || 0));
+  const topMentions = allMentions.slice(0, 3);
+  
+  // Determine trend (weighted by volume)
+  const trendWeights = { rising: 1, falling: -1, stable: 0 };
+  const redditTrend = trendWeights[redditData.recent_trend] || 0;
+  const youtubeTrend = trendWeights[youtubeData.recent_trend] || 0;
+  const combinedTrendScore = (redditTrend * totalPosts + youtubeTrend * totalComments) / combinedTotal;
+  
+  let recent_trend = 'stable';
+  if (combinedTrendScore > 0.2) recent_trend = 'rising';
+  else if (combinedTrendScore < -0.2) recent_trend = 'falling';
+  
+  return {
+    overall,
+    overall_percentage,
+    positive: Math.round(positive),
+    neutral: Math.round(neutral),
+    negative: Math.round(negative),
+    recent_trend,
+    top_mentions: topMentions,
+    combined_total: combinedTotal,
+    reddit_posts: totalPosts,
+    youtube_comments: totalComments
+  };
+};
+
 export const callOpenAI = async ({ brand, model, question, category }) => {
   try {
     // Fetch real Reddit and YouTube sentiment data
@@ -12,11 +88,15 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
     const youtubeSentiment = await getYouTubeSentiment(brand, model);
     console.log('YouTube sentiment:', youtubeSentiment);
     
+    // Combine sentiment data
+    const combinedSentiment = combineSentimentData(redditSentiment, youtubeSentiment);
+    console.log('Combined sentiment:', combinedSentiment);
+    
     const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY?.trim();
     
     if (!OPENROUTER_API_KEY) {
       console.warn('OpenRouter API key is not configured, using mock data with real sentiment');
-      return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment);
+      return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment);
     }
 
     // Prepare Reddit context
@@ -97,16 +177,7 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
                 }
               ],
               "reddit_sentiment": ${JSON.stringify(redditSentiment || null)},
-              "youtube_sentiment": ${JSON.stringify(youtubeSentiment || null)},
-              "social_sentiment": {
-                "overall": ${(redditSentiment?.overall_percentage || 50) / 100},
-                "positive": ${redditSentiment?.positive || 0},
-                "neutral": ${redditSentiment?.neutral || 0},
-                "negative": ${redditSentiment?.negative || 0},
-                "recent_trend": "${redditSentiment?.recent_trend || 'stable'}",
-                "total_posts_analyzed": ${redditSentiment?.total_posts_analyzed || 0},
-                "top_mentions": ${JSON.stringify(redditSentiment?.top_mentions || [])}
-              }
+              "youtube_sentiment": ${JSON.stringify(youtubeSentiment || null)}
             }
             
             IMPORTANT: Return ONLY the JSON object, no additional text, no explanations, no code blocks.`
@@ -127,7 +198,7 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
       
       if (response.status === 429 || response.status === 402) {
         console.warn('API rate limit reached, using mock data with real sentiment');
-        return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment);
+        return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment);
       }
       
       throw new Error(`OpenRouter API error: ${response.status}`);
@@ -165,15 +236,7 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
         ...parsedResponse,
         reddit_sentiment: redditSentiment || null,
         youtube_sentiment: youtubeSentiment || null,
-        social_sentiment: parsedResponse.social_sentiment || {
-          overall: (redditSentiment?.overall_percentage || 50) / 100,
-          positive: redditSentiment?.positive || 0,
-          neutral: redditSentiment?.neutral || 0,
-          negative: redditSentiment?.negative || 0,
-          recent_trend: redditSentiment?.recent_trend || 'stable',
-          total_posts_analyzed: redditSentiment?.total_posts_analyzed || 0,
-          top_mentions: redditSentiment?.top_mentions || []
-        }
+        social_sentiment: combinedSentiment
       };
       
       return finalResponse;
@@ -181,18 +244,19 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
       console.error('Failed to parse JSON response:', parseError);
       console.error('Raw content that failed:', data.choices[0].message.content);
       
-      return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment);
+      return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment);
     }
   } catch (error) {
     console.error('OpenRouter call failed:', error);
     const redditSentiment = await getRedditSentiment(brand, model);
     const youtubeSentiment = await getYouTubeSentiment(brand, model);
-    return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment);
+    const combinedSentiment = combineSentimentData(redditSentiment, youtubeSentiment);
+    return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment);
   }
 };
 
 // Mock response function with real sentiment data
-const getMockResponse = (brand, model, question, category, redditSentiment, youtubeSentiment) => {
+const getMockResponse = (brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment) => {
   const questionLower = question?.toLowerCase() || '';
   let keyPhrase = 'overall satisfaction';
   
@@ -273,14 +337,17 @@ const getMockResponse = (brand, model, question, category, redditSentiment, yout
     ],
     reddit_sentiment: redditData,
     youtube_sentiment: youtubeData,
-    social_sentiment: {
-      overall: redditData.overall_percentage / 100,
-      positive: redditData.positive,
-      neutral: redditData.neutral,
-      negative: redditData.negative,
-      recent_trend: redditData.recent_trend,
-      total_posts_analyzed: redditData.total_posts_analyzed,
-      top_mentions: redditData.top_mentions
+    social_sentiment: combinedSentiment || {
+      overall: 0,
+      overall_percentage: 50,
+      positive: 0,
+      neutral: 0,
+      negative: 0,
+      recent_trend: 'stable',
+      top_mentions: [],
+      combined_total: 0,
+      reddit_posts: 0,
+      youtube_comments: 0
     }
   };
 };

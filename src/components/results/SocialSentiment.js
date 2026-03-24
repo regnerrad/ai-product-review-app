@@ -9,8 +9,8 @@ const SentimentBadge = ({ sentiment }) => {
 };
 
 const SocialSentiment = ({ data }) => {
-  // If we have Reddit data, use it
-  if (data && data.total_posts_analyzed > 0) {
+  // If we have combined data, use it
+  if (data && data.combined_total > 0) {
     const sentimentColor = data.overall > 0.3 ? 'text-emerald-600' : data.overall < -0.3 ? 'text-red-600' : 'text-amber-600';
     const sentimentIcon = data.overall > 0.3 ? <ThumbsUp className="w-5 h-5" /> : data.overall < -0.3 ? <ThumbsDown className="w-5 h-5" /> : <Meh className="w-5 h-5" />;
 
@@ -21,10 +21,16 @@ const SocialSentiment = ({ data }) => {
           Social Media Sentiment
         </h3>
 
+        {/* Source Breakdown */}
+        <div className="flex gap-4 mb-4 text-xs text-slate-500">
+          <span>📊 Reddit: {data.reddit_posts || 0} posts</span>
+          <span>🎬 YouTube: {data.youtube_comments || 0} comments</span>
+        </div>
+
         <div className="flex items-center gap-4 mb-6">
           <div className={`flex items-center gap-2 ${sentimentColor}`}>
             {sentimentIcon}
-            <span className="text-2xl font-bold">{Math.round(data.overall_percentage || data.overall * 100)}%</span>
+            <span className="text-2xl font-bold">{Math.round(data.overall_percentage)}%</span>
           </div>
           <div className="flex-1">
             <div className="flex justify-between text-sm mb-1">
@@ -54,8 +60,12 @@ const SocialSentiment = ({ data }) => {
               <div className="mt-0.5">
                 {mention.platform === 'Twitter' ? (
                   <Twitter className="w-4 h-4 text-sky-500" />
+                ) : mention.platform === 'Reddit' ? (
+                  <MessageCircle className="w-4 h-4 text-orange-500" />
+                ) : mention.platform === 'YouTube' ? (
+                  <MessageSquare className="w-4 h-4 text-red-500" />
                 ) : (
-                  <MessageSquare className="w-4 h-4 text-orange-500" />
+                  <MessageSquare className="w-4 h-4 text-slate-500" />
                 )}
               </div>
               <div className="flex-1">
@@ -63,7 +73,8 @@ const SocialSentiment = ({ data }) => {
                 <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
                   <SentimentBadge sentiment={mention.sentiment} />
                   <span>❤️ {mention.likes || mention.score || mention.upvotes || 0}</span>
-                  {mention.subreddit && <span>r/{mention.subreddit}</span>}
+                  {mention.platform === 'Reddit' && <span>r/{mention.subreddit}</span>}
+                  {mention.platform === 'YouTube' && <span>@{mention.author}</span>}
                 </div>
               </div>
             </div>
@@ -71,13 +82,13 @@ const SocialSentiment = ({ data }) => {
         </div>
 
         <p className="text-xs text-slate-400 mt-4 italic">
-          * Sentiment based on {data.total_posts_analyzed} Reddit discussions. Refreshed periodically.
+          * Combined sentiment from {data.combined_total || 0} Reddit posts and YouTube comments. Refreshed periodically.
         </p>
       </div>
     );
   }
 
-  // Fallback when no Reddit data is available
+  // Fallback when no data is available
   return (
     <div className="sleek-card p-6">
       <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">

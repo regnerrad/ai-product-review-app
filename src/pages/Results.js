@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { callOpenAI } from '../services/openaiService';
 import { saveProductSearchToSupabase, updateSearchWithResults } from "../services/productSearchService";
-import { Star, Check, X, ShoppingBag, TrendingUp, ArrowRight, ExternalLink, Shield, Users, Clock, Newspaper, Youtube, MessageCircle, Sparkles } from 'lucide-react';
+import { Star, Check, X, ShoppingBag, TrendingUp, ArrowRight, ExternalLink, Shield, Users, Clock, Newspaper, Youtube, MessageCircle, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 
 // Import tracking
 import { trackPageView, trackTimeOnPage, trackClick, trackPurchaseClick, trackReviewLinkClick, trackAlternativeClick } from '../services/trackingService';
@@ -21,6 +21,19 @@ const Results = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [alternatives, setAlternatives] = useState([]);
+  
+  // State for collapsible sections
+  const [collapsedSections, setCollapsedSections] = useState({
+    reddit: false,
+    youtube: false
+  });
+
+  const toggleSection = (section) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
 
   // Track page view
   useEffect(() => {
@@ -78,10 +91,11 @@ const Results = () => {
         });
         
         setInsights(aiResponse);
+        console.log('YouTube data in insights:', aiResponse.youtube_sentiment);
+        console.log('Reddit data in insights:', aiResponse.reddit_sentiment);
         
         try {
           if (searchId) {
-            // CRITICAL FIX: Extract the ID properly
             let idToUse = null;
             
             if (typeof searchId === 'string') {
@@ -100,7 +114,6 @@ const Results = () => {
               console.log('Skipping update - invalid or temp ID:', idToUse);
             }
           } else {
-            // Save new search and capture the result
             const savedSearch = await saveProductSearchToSupabase({
               brand,
               model,
@@ -127,7 +140,7 @@ const Results = () => {
     fetchAIInsights();
   }, [category, brand, model, question, searchId]);
 
-  // Fetch smart alternatives (still fetched but not displayed per your request)
+  // Fetch smart alternatives
   useEffect(() => {
     if (brand && model && modelsByBrand) {
       const allProducts = getAllProducts(modelsByBrand);
@@ -283,13 +296,45 @@ const Results = () => {
               </div>
               
               {/* Reddit Insights Section */}
-              <div>
-                <RedditInsights data={insights.social_sentiment} />
+              <div className="mb-6">
+                <div className="border rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => toggleSection('reddit')}
+                    className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5 text-orange-500" />
+                      <span className="font-medium">Reddit Insights</span>
+                    </div>
+                    {collapsedSections.reddit ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+                  </button>
+                  {!collapsedSections.reddit && (
+                    <div className="p-4">
+                      <RedditInsights data={insights.reddit_sentiment} />
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* YouTube Insights Section - ADD THIS */}
-              <div className="mt-6">
-                <YouTubeInsights data={insights.youtube_sentiment} />
+              {/* YouTube Insights Section */}
+              <div className="mb-6">
+                <div className="border rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => toggleSection('youtube')}
+                    className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Youtube className="w-5 h-5 text-red-500" />
+                      <span className="font-medium">YouTube Insights</span>
+                    </div>
+                    {collapsedSections.youtube ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+                  </button>
+                  {!collapsedSections.youtube && (
+                    <div className="p-4">
+                      <YouTubeInsights data={insights.youtube_sentiment} />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -463,7 +508,7 @@ const Results = () => {
         <div className="text-center">
           <div className="inline-flex items-center gap-2 text-xs text-slate-400 bg-white px-4 py-2 rounded-full border border-slate-200">
             <Shield className="w-3 h-3" />
-            <span>AI analysis based on verified customer reviews and Reddit community discussions</span>
+            <span>AI analysis based on verified customer reviews and Reddit & YouTube community discussions</span>
           </div>
         </div>
       </div>

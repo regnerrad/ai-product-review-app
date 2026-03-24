@@ -15,7 +15,8 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.2",
     "sentiment": "^5.0.2",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "youtube-comment-api": "^3.0.2"
   },
   "scripts": {
     "start": "react-scripts start",
