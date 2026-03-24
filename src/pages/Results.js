@@ -11,6 +11,7 @@ import { trackPageView, trackTimeOnPage, trackClick, trackPurchaseClick, trackRe
 // New imports for enhanced features
 import ReviewLinks from '../components/results/ReviewLinks';
 import RedditInsights from '../components/results/RedditInsights';
+import YouTubeInsights from '../components/results/YouTubeInsights';
 import { getSmartAlternatives, getAllProducts } from '../services/smartMatchingService';
 import { modelsByBrand } from '../data/models';
 
@@ -284,6 +285,11 @@ const Results = () => {
               {/* Reddit Insights Section */}
               <div>
                 <RedditInsights data={insights.social_sentiment} />
+              </div>
+
+              {/* YouTube Insights Section - ADD THIS */}
+              <div className="mt-6">
+                <YouTubeInsights data={insights.youtube_sentiment} />
               </div>
             </div>
           </div>

@@ -1,17 +1,22 @@
 import { getRedditSentiment } from './redditService';
+import { getYouTubeSentiment } from './youtubeService';
 
 export const callOpenAI = async ({ brand, model, question, category }) => {
   try {
-    // Fetch real Reddit sentiment data
+    // Fetch real Reddit and YouTube sentiment data
     console.log(`Fetching Reddit sentiment for ${brand} ${model}...`);
     const redditSentiment = await getRedditSentiment(brand, model);
     console.log('Reddit sentiment:', redditSentiment);
+
+    console.log(`Fetching YouTube sentiment for ${brand} ${model}...`);
+    const youtubeSentiment = await getYouTubeSentiment(brand, model);
+    console.log('YouTube sentiment:', youtubeSentiment);
     
     const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY?.trim();
     
     if (!OPENROUTER_API_KEY) {
-      console.warn('OpenRouter API key is not configured, using mock data with real Reddit sentiment');
-      return getMockResponse(brand, model, question, category, redditSentiment);
+      console.warn('OpenRouter API key is not configured, using mock data with real sentiment');
+      return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment);
     }
 
     // Prepare Reddit context
@@ -26,6 +31,18 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
           `  • "${m.text.substring(0, 100)}" (r/${m.subreddit}, ${m.score} upvotes)`
         ).join('\n')
       : '\n\n(No Reddit discussions found for this product.)';
+    
+    // Prepare YouTube context
+    const youtubeContext = youtubeSentiment && youtubeSentiment.total_comments_analyzed > 0
+      ? `\n\n=== REAL YOUTUBE COMMUNITY DATA ===\n` +
+        `- Total Comments: ${youtubeSentiment.total_comments_analyzed} YouTube comments analyzed\n` +
+        `- Community Sentiment: ${youtubeSentiment.positive}% positive, ${youtubeSentiment.neutral}% neutral, ${youtubeSentiment.negative}% negative\n` +
+        `- Overall Sentiment Score: ${youtubeSentiment.overall_percentage}% positive\n` +
+        `- Top Comments:\n` +
+        youtubeSentiment.top_mentions.map(m => 
+          `  • "${m.text.substring(0, 100)}" (${m.likes} likes)`
+        ).join('\n')
+      : '\n\n(No YouTube comments found for this product.)';
     
     console.log('Calling OpenRouter API for:', { brand, model, question, category });
     
@@ -46,25 +63,18 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
             Provide comprehensive product analysis based on the user's question.
             
             ${redditContext}
+            ${youtubeContext}
             
             === CRITICAL FORMATTING INSTRUCTIONS ===
-            Your response MUST have the "detailed_summary" field formatted EXACTLY like this:
-            
-            [Write 2-3 sentences about the product based on general knowledge, features, and specifications.]
-            
-            Then add a new paragraph with Reddit insights.
-            
-            IMPORTANT: 
-            - Keep product analysis separate from Reddit insights
-            - Don't use markdown formatting in the JSON string
+            Your response MUST have the "detailed_summary" field formatted with product analysis first, then community insights.
             
             ALWAYS respond with a valid JSON object matching this EXACT structure:
             {
               "answer_to_question": "Direct answer to the user's question",
-              "detailed_summary": "Product analysis text here. Then a new paragraph with Reddit insights here.",
+              "detailed_summary": "Product analysis text here.",
               "rating_info": {
                 "average_rating": 4.5,
-                "total_reviews": ${redditSentiment?.total_posts_analyzed || 1000},
+                "total_reviews": ${(redditSentiment?.total_posts_analyzed || 0) + (youtubeSentiment?.total_comments_analyzed || 0) || 1000},
                 "rating_breakdown": {}
               },
               "pros": ["Pro 1", "Pro 2", "Pro 3"],
@@ -86,11 +96,13 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
                   "price_comparison": "Price comparison info"
                 }
               ],
+              "reddit_sentiment": ${JSON.stringify(redditSentiment || null)},
+              "youtube_sentiment": ${JSON.stringify(youtubeSentiment || null)},
               "social_sentiment": {
                 "overall": ${(redditSentiment?.overall_percentage || 50) / 100},
-                "positive": ${redditSentiment?.positive || 65},
-                "neutral": ${redditSentiment?.neutral || 20},
-                "negative": ${redditSentiment?.negative || 15},
+                "positive": ${redditSentiment?.positive || 0},
+                "neutral": ${redditSentiment?.neutral || 0},
+                "negative": ${redditSentiment?.negative || 0},
                 "recent_trend": "${redditSentiment?.recent_trend || 'stable'}",
                 "total_posts_analyzed": ${redditSentiment?.total_posts_analyzed || 0},
                 "top_mentions": ${JSON.stringify(redditSentiment?.top_mentions || [])}
@@ -114,8 +126,8 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
       console.error('OpenRouter API error:', response.status, errorText);
       
       if (response.status === 429 || response.status === 402) {
-        console.warn('API rate limit reached, using mock data with real Reddit sentiment');
-        return getMockResponse(brand, model, question, category, redditSentiment);
+        console.warn('API rate limit reached, using mock data with real sentiment');
+        return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment);
       }
       
       throw new Error(`OpenRouter API error: ${response.status}`);
@@ -128,17 +140,14 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
       const content = data.choices[0].message.content;
       console.log('Raw AI response received, length:', content.length);
       
-      // Clean the content - remove any markdown code blocks and extract JSON
       let cleanContent = content.trim();
       
-      // Remove markdown code blocks
       if (cleanContent.includes('```json')) {
         cleanContent = cleanContent.split('```json')[1].split('```')[0].trim();
       } else if (cleanContent.includes('```')) {
         cleanContent = cleanContent.split('```')[1].split('```')[0].trim();
       }
       
-      // Try to find JSON object in the text if it's not pure JSON
       if (!cleanContent.startsWith('{')) {
         const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
@@ -148,40 +157,42 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
       
       console.log('Cleaned content length:', cleanContent.length);
       
-      // Parse the JSON
       const parsedResponse = JSON.parse(cleanContent);
       console.log('Successfully parsed JSON response');
       
-      // Ensure social_sentiment is properly structured
-      if (!parsedResponse.social_sentiment || typeof parsedResponse.social_sentiment !== 'object') {
-        parsedResponse.social_sentiment = redditSentiment || {
-          overall: 0.65,
-          positive: 65,
-          neutral: 20,
-          negative: 15,
-          recent_trend: 'stable',
-          total_posts_analyzed: 0,
-          top_mentions: []
-        };
-      }
+      // Ensure sentiment data is included
+      const finalResponse = {
+        ...parsedResponse,
+        reddit_sentiment: redditSentiment || null,
+        youtube_sentiment: youtubeSentiment || null,
+        social_sentiment: parsedResponse.social_sentiment || {
+          overall: (redditSentiment?.overall_percentage || 50) / 100,
+          positive: redditSentiment?.positive || 0,
+          neutral: redditSentiment?.neutral || 0,
+          negative: redditSentiment?.negative || 0,
+          recent_trend: redditSentiment?.recent_trend || 'stable',
+          total_posts_analyzed: redditSentiment?.total_posts_analyzed || 0,
+          top_mentions: redditSentiment?.top_mentions || []
+        }
+      };
       
-      return parsedResponse;
+      return finalResponse;
     } catch (parseError) {
       console.error('Failed to parse JSON response:', parseError);
       console.error('Raw content that failed:', data.choices[0].message.content);
       
-      // Return mock response with real Reddit data
-      return getMockResponse(brand, model, question, category, redditSentiment);
+      return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment);
     }
   } catch (error) {
     console.error('OpenRouter call failed:', error);
     const redditSentiment = await getRedditSentiment(brand, model);
-    return getMockResponse(brand, model, question, category, redditSentiment);
+    const youtubeSentiment = await getYouTubeSentiment(brand, model);
+    return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment);
   }
 };
 
-// Mock response function with real Reddit sentiment data
-const getMockResponse = (brand, model, question, category, redditSentiment) => {
+// Mock response function with real sentiment data
+const getMockResponse = (brand, model, question, category, redditSentiment, youtubeSentiment) => {
   const questionLower = question?.toLowerCase() || '';
   let keyPhrase = 'overall satisfaction';
   
@@ -192,58 +203,43 @@ const getMockResponse = (brand, model, question, category, redditSentiment) => {
   else if (questionLower.includes('screen') || questionLower.includes('display')) keyPhrase = 'display quality';
   else if (questionLower.includes('durable') || questionLower.includes('build')) keyPhrase = 'build quality';
 
-  // Use real Reddit sentiment data if available
-  const sentimentData = redditSentiment || {
-    overall: 0.65,
-    overall_percentage: 65,
-    positive: 65,
-    neutral: 20,
-    negative: 15,
+  const redditData = redditSentiment || {
+    overall_percentage: 50,
+    positive: 0,
+    neutral: 0,
+    negative: 0,
     recent_trend: 'stable',
-    top_mentions: [],
-    total_posts_analyzed: 0
+    total_posts_analyzed: 0,
+    top_mentions: []
   };
 
-  // Build detailed summary
-  let productAnalysis = `${brand} ${model} is a well-regarded product in the ${category || 'product'} category. `;
-  productAnalysis += `Regarding ${keyPhrase}, the device delivers solid performance with good reliability and build quality. `;
-  productAnalysis += `The features are competitive within its segment, offering good value for the price point.`;
-  
-  let redditInsights = '';
-  if (sentimentData.total_posts_analyzed > 0) {
-    const subreddits = [...new Set(sentimentData.top_mentions.map(m => m.subreddit))];
-    redditInsights = ` Based on ${sentimentData.total_posts_analyzed} Reddit discussions across r/${subreddits.slice(0, 3).join(', r/')}, ${sentimentData.positive}% of posts are positive, ${sentimentData.negative}% express concerns. Community sentiment is ${sentimentData.recent_trend}.`;
-  } else {
-    redditInsights = ` No Reddit discussions found for this product yet.`;
-  }
+  const youtubeData = youtubeSentiment || {
+    overall_percentage: 50,
+    positive: 0,
+    neutral: 0,
+    negative: 0,
+    total_comments_analyzed: 0,
+    top_mentions: []
+  };
 
-  const detailedSummary = productAnalysis + redditInsights;
+  const totalReviews = redditData.total_posts_analyzed + youtubeData.total_comments_analyzed;
 
   return {
-    answer_to_question: `Based on general product analysis${sentimentData.total_posts_analyzed > 0 ? ` and ${sentimentData.total_posts_analyzed} Reddit discussions` : ''}, the ${brand} ${model} is a solid choice for ${keyPhrase}.`,
-    detailed_summary: detailedSummary,
+    answer_to_question: `Based on product analysis${redditData.total_posts_analyzed > 0 ? ` and ${redditData.total_posts_analyzed} Reddit discussions` : ''}${youtubeData.total_comments_analyzed > 0 ? ` and ${youtubeData.total_comments_analyzed} YouTube comments` : ''}, the ${brand} ${model} is a solid choice for ${keyPhrase}.`,
+    detailed_summary: `${brand} ${model} is a well-regarded product in the ${category || 'product'} category. Regarding ${keyPhrase}, the device delivers solid performance with good reliability.`,
     rating_info: { 
-      average_rating: sentimentData.total_posts_analyzed > 0 ? 3.5 + (sentimentData.overall_percentage / 100) : 4.2, 
-      total_reviews: sentimentData.total_posts_analyzed || 847,
+      average_rating: 4.2, 
+      total_reviews: totalReviews || 847,
       rating_breakdown: {
-        "5": Math.round(sentimentData.positive * 0.6),
-        "4": Math.round(sentimentData.positive * 0.3),
-        "3": Math.round(sentimentData.neutral),
-        "2": Math.round(sentimentData.negative * 0.6),
-        "1": Math.round(sentimentData.negative * 0.4)
+        "5": 420,
+        "4": 250,
+        "3": 100,
+        "2": 50,
+        "1": 27
       }
     },
-    pros: [
-      `Good ${keyPhrase}`,
-      "Reliable performance",
-      "Quality build",
-      "Competitive pricing"
-    ],
-    cons: [
-      "Could have better battery life",
-      "Limited color options",
-      "Premium price point"
-    ],
+    pros: [`Good ${keyPhrase}`, "Reliable performance", "Quality build", "Competitive pricing"],
+    cons: ["Could have better battery life", "Limited color options", "Premium price point"],
     purchase_options: [
       {
         store: "Shopee",
@@ -271,24 +267,20 @@ const getMockResponse = (brand, model, question, category, redditSentiment) => {
       {
         brand: brand === "Apple" ? "Samsung" : "Apple",
         model: brand === "Apple" ? "Galaxy S25" : "iPhone 16",
-        reason: `Strong competitor with similar features`,
+        reason: "Strong competitor with similar features",
         price_comparison: "Similar price range"
-      },
-      {
-        brand: brand,
-        model: model + " Pro",
-        reason: "Higher-end version with more features",
-        price_comparison: "Premium version, ~$100 more"
       }
     ],
+    reddit_sentiment: redditData,
+    youtube_sentiment: youtubeData,
     social_sentiment: {
-      overall: sentimentData.overall_percentage / 100,
-      positive: sentimentData.positive,
-      neutral: sentimentData.neutral,
-      negative: sentimentData.negative,
-      recent_trend: sentimentData.recent_trend,
-      total_posts_analyzed: sentimentData.total_posts_analyzed,
-      top_mentions: sentimentData.top_mentions.length > 0 ? sentimentData.top_mentions : []
+      overall: redditData.overall_percentage / 100,
+      positive: redditData.positive,
+      neutral: redditData.neutral,
+      negative: redditData.negative,
+      recent_trend: redditData.recent_trend,
+      total_posts_analyzed: redditData.total_posts_analyzed,
+      top_mentions: redditData.top_mentions
     }
   };
 };
