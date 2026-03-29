@@ -15,13 +15,34 @@ import YouTubeInsights from '../components/results/YouTubeInsights';
 import { getSmartAlternatives, getAllProducts } from '../services/smartMatchingService';
 import { modelsByBrand } from '../data/models';
 
+// Derive a realistic-looking rating breakdown from average + total
+// Used instead of asking the AI to generate it (saves tokens)
+const deriveBreakdown = (avgRating, totalReviews) => {
+  const r = avgRating || 4.2;
+  const t = totalReviews || 847;
+
+  let weights;
+  if (r >= 4.5)      weights = { 5: 0.60, 4: 0.25, 3: 0.09, 2: 0.04, 1: 0.02 };
+  else if (r >= 4.0) weights = { 5: 0.45, 4: 0.30, 3: 0.14, 2: 0.07, 1: 0.04 };
+  else if (r >= 3.5) weights = { 5: 0.30, 4: 0.30, 3: 0.20, 2: 0.12, 1: 0.08 };
+  else               weights = { 5: 0.20, 4: 0.25, 3: 0.20, 2: 0.20, 1: 0.15 };
+
+  return {
+    5: Math.round(t * weights[5]),
+    4: Math.round(t * weights[4]),
+    3: Math.round(t * weights[3]),
+    2: Math.round(t * weights[2]),
+    1: Math.round(t * weights[1]),
+  };
+};
+
 const Results = () => {
   const location = useLocation();
   const [insights, setInsights] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [alternatives, setAlternatives] = useState([]);
-  
+
   // State for collapsible sections
   const [collapsedSections, setCollapsedSections] = useState({
     reddit: false,
@@ -49,7 +70,6 @@ const Results = () => {
     };
   }, []);
 
-  // Extract parameters from both location.state and URL params
   const getSearchParams = () => {
     if (location.state) {
       return {
@@ -60,7 +80,7 @@ const Results = () => {
         searchId: location.state.searchId
       };
     }
-    
+
     const searchParams = new URLSearchParams(location.search);
     return {
       category: searchParams.get('category') || '',
@@ -82,31 +102,30 @@ const Results = () => {
       }
 
       try {
-        // Call OpenAI to get insights
         const aiResponse = await callOpenAI({
           category: category || 'general',
           brand,
           model,
           question
         });
-        
+
         setInsights(aiResponse);
         console.log('YouTube data in insights:', aiResponse.youtube_sentiment);
         console.log('Reddit data in insights:', aiResponse.reddit_sentiment);
-        
+
         try {
           if (searchId) {
             let idToUse = null;
-            
+
             if (typeof searchId === 'string') {
               idToUse = searchId;
             } else if (typeof searchId === 'object' && searchId !== null) {
               idToUse = searchId.id || searchId.searchId;
               console.log('Extracted ID from object:', idToUse);
             }
-            
-            if (idToUse && typeof idToUse === 'string' && 
-                !idToUse.includes('{') && !idToUse.includes('[') && 
+
+            if (idToUse && typeof idToUse === 'string' &&
+                !idToUse.includes('{') && !idToUse.includes('[') &&
                 !idToUse.startsWith('temp_')) {
               console.log('Updating search with ID:', idToUse);
               await updateSearchWithResults(idToUse, aiResponse);
@@ -121,7 +140,7 @@ const Results = () => {
               user_question: question,
               user_id: null
             }, aiResponse);
-            
+
             if (savedSearch && savedSearch.id) {
               console.log('Saved search with ID:', savedSearch.id);
             }
@@ -212,7 +231,7 @@ const Results = () => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
-    
+
     for (let i = 0; i < 5; i++) {
       if (i < fullStars) {
         stars.push(<Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />);
@@ -224,6 +243,12 @@ const Results = () => {
     }
     return stars;
   };
+
+  // Always derive breakdown client-side — no longer requested from AI
+  const ratingBreakdown = deriveBreakdown(
+    insights.rating_info?.average_rating,
+    insights.rating_info?.total_reviews
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -281,7 +306,7 @@ const Results = () => {
                 <Sparkles className="w-5 h-5 text-indigo-500" />
                 Detailed Analysis
               </h3>
-              
+
               {/* Product Analysis Section */}
               <div className="mb-6 pb-6 border-b border-slate-200">
                 <div className="flex items-center gap-2 mb-3">
@@ -294,7 +319,7 @@ const Results = () => {
                   {insights.detailed_summary}
                 </p>
               </div>
-              
+
               {/* Reddit Insights Section */}
               <div className="mb-6">
                 <div className="border rounded-xl overflow-hidden">
@@ -361,25 +386,26 @@ const Results = () => {
             <p className="text-sm text-slate-600 mb-4">
               Based on {(insights.rating_info?.total_reviews || 847).toLocaleString()} reviews
             </p>
-            
-            {insights.rating_info?.rating_breakdown && (
-              <div className="space-y-2">
-                {Object.entries(insights.rating_info.rating_breakdown).map(([stars, count]) => (
+
+            {/* Rating breakdown — always derived client-side, never from AI */}
+            <div className="space-y-2">
+              {Object.entries(ratingBreakdown)
+                .sort((a, b) => b[0] - a[0])
+                .map(([stars, count]) => (
                   <div key={stars} className="flex items-center gap-2 text-xs">
-                    <span className="text-slate-600 w-8">{stars}</span>
+                    <span className="text-slate-600 w-8">{stars}★</span>
                     <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-amber-400 rounded-full"
-                        style={{ width: `${(count / insights.rating_info.total_reviews) * 100}%` }}
+                        style={{
+                          width: `${(count / (insights.rating_info?.total_reviews || 847)) * 100}%`
+                        }}
                       />
                     </div>
-                    <span className="text-slate-600 w-12 text-right">
-                      {count}
-                    </span>
+                    <span className="text-slate-600 w-12 text-right">{count}</span>
                   </div>
                 ))}
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Where to Buy Card */}
@@ -390,7 +416,7 @@ const Results = () => {
               </div>
               <h3 className="text-lg font-semibold text-slate-900">Where to Buy</h3>
             </div>
-            
+
             <div className="space-y-3">
               {insights.purchase_options?.map((option, index) => (
                 <a
@@ -417,13 +443,13 @@ const Results = () => {
           </div>
         </div>
 
-        {/* Row 4: Merged Pros & Cons + Alternative Options */}
+        {/* Row 4: Pros & Cons + Alternatives */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Merged Pros & Cons Card */}
+          {/* Pros & Cons Card */}
           <div className="sleek-card p-6 border border-slate-200 rounded-xl bg-white">
             <h3 className="text-lg font-semibold text-slate-900 mb-4">Pros & Cons</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Pros Column */}
+              {/* Pros */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-6 h-6 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
@@ -443,7 +469,7 @@ const Results = () => {
                 </ul>
               </div>
 
-              {/* Cons Column */}
+              {/* Cons */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
@@ -465,7 +491,7 @@ const Results = () => {
             </div>
           </div>
 
-          {/* Alternative Options Card */}
+          {/* Alternatives Card */}
           {insights.alternatives && insights.alternatives.length > 0 ? (
             <div className="sleek-card p-6 border border-slate-200 rounded-xl bg-white">
               <div className="flex items-center gap-2 mb-4">

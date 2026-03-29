@@ -2,30 +2,6 @@
 export const modelsByCategory = {
   "Smartphones": {
     // Singapore popular brands
-    "Oppo": [
-      "Find X8 Pro", "Find X8", "Find X7 Ultra", "Find X7", "Find X6 Pro",
-      "Reno 13 Pro", "Reno 13", "Reno 12 Pro", "Reno 12", "Reno 11 Pro", "Reno 11",
-      "A98 5G", "A78 5G", "A58 5G", "A38", "A18",
-      "K12x", "K11x", "F27 Pro+", "F25 Pro", "F23"
-    ],
-    "Vivo": [
-      "X200 Pro", "X200", "X100 Pro", "X100", "X90 Pro+", "X90 Pro",
-      "V40 Pro", "V40", "V30 Pro", "V30", "V29e", "V27 Pro",
-      "Y200 5G", "Y100 5G", "Y56 5G", "Y36", "Y28", "Y18",
-      "T3 Pro", "T3 5G", "T2 Pro", "T2 5G"
-    ],
-    "Realme": [
-      "GT 7 Pro", "GT 7", "GT 6", "GT 6T", "GT 5 Pro", "GT 5",
-      "13 Pro+", "13 Pro", "13", "12 Pro+", "12 Pro", "12",
-      "C67 5G", "C65 5G", "C55", "C51", "C31",
-      "Note 50", "Note 60", "P1 Pro 5G", "P1 5G"
-    ],
-    "Honor": [
-      "Magic 7 Pro", "Magic 7", "Magic 6 Pro", "Magic 6", "Magic 5 Pro", "Magic 5",
-      "200 Pro", "200", "100 Pro", "100", "90 Pro", "90", "80 Pro", "80",
-      "X9c 5G", "X9b 5G", "X8b", "X7c", "X6a",
-      "Pad 9", "Pad X9", "Pad 8"
-    ],
     // Existing brands (expanded)
     "Apple": [
       "iPhone 17 Pro Max", "iPhone 17 Pro", "iPhone 17 Plus", "iPhone 17",
@@ -71,6 +47,30 @@ export const modelsByCategory = {
       "POCO F7 Ultra", "POCO F7 Pro", "POCO F6", "POCO F6 Pro",
       "POCO X7 Pro", "POCO X6", "POCO M6 Pro", "POCO M6"
     ],
+    "Oppo": [
+      "Find X8 Pro", "Find X8", "Find X7 Ultra", "Find X7", "Find X6 Pro",
+      "Reno 13 Pro", "Reno 13", "Reno 12 Pro", "Reno 12", "Reno 11 Pro", "Reno 11",
+      "A98 5G", "A78 5G", "A58 5G", "A38", "A18",
+      "K12x", "K11x", "F27 Pro+", "F25 Pro", "F23"
+    ],
+    "Vivo": [
+      "X200 Pro", "X200", "X100 Pro", "X100", "X90 Pro+", "X90 Pro",
+      "V40 Pro", "V40", "V30 Pro", "V30", "V29e", "V27 Pro",
+      "Y200 5G", "Y100 5G", "Y56 5G", "Y36", "Y28", "Y18",
+      "T3 Pro", "T3 5G", "T2 Pro", "T2 5G"
+    ],
+    "Realme": [
+      "GT 7 Pro", "GT 7", "GT 6", "GT 6T", "GT 5 Pro", "GT 5",
+      "13 Pro+", "13 Pro", "13", "12 Pro+", "12 Pro", "12",
+      "C67 5G", "C65 5G", "C55", "C51", "C31",
+      "Note 50", "Note 60", "P1 Pro 5G", "P1 5G"
+    ],
+    "Honor": [
+      "Magic 7 Pro", "Magic 7", "Magic 6 Pro", "Magic 6", "Magic 5 Pro", "Magic 5",
+      "200 Pro", "200", "100 Pro", "100", "90 Pro", "90", "80 Pro", "80",
+      "X9c 5G", "X9b 5G", "X8b", "X7c", "X6a",
+      "Pad 9", "Pad X9", "Pad 8"
+    ],
     "Motorola": [
       "Edge 50 Ultra", "Edge 50 Pro", "Edge 50 Fusion", "Edge 50",
       "Edge 40 Pro", "Edge 40", "Edge 30 Pro", "Edge 30",
@@ -87,22 +87,6 @@ export const modelsByCategory = {
 
   "Tablets": {
     // Singapore popular brands (expanded)
-    "Xiaomi": [
-      "Xiaomi Pad 7 Pro", "Xiaomi Pad 7", "Xiaomi Pad 6 Pro", "Xiaomi Pad 6",
-      "Redmi Pad SE 2", "Redmi Pad SE", "Redmi Pad Pro", "Redmi Pad",
-      "POCO Pad"
-    ],
-    "Oppo": [
-      "Oppo Pad 3 Pro", "Oppo Pad 3", "Oppo Pad 2", "Oppo Pad",
-      "Oppo Pad Air 2", "Oppo Pad Air"
-    ],
-    "Vivo": [
-      "Vivo Pad 3 Pro", "Vivo Pad 3", "Vivo Pad 2", "Vivo Pad"
-    ],
-    "Honor": [
-      "Honor Pad 9 Pro", "Honor Pad 9", "Honor Pad X9", "Honor Pad X8a",
-      "Honor Pad 8", "Honor Pad 8 Pro"
-    ],
     // Existing brands (expanded)
     "Apple": [
       "iPad Pro 13 (M4)", "iPad Pro 11 (M4)",
@@ -134,6 +118,22 @@ export const modelsByCategory = {
     "Google": [
       "Pixel Tablet 2", "Pixel Tablet"
     ],
+    "Xiaomi": [
+      "Xiaomi Pad 7 Pro", "Xiaomi Pad 7", "Xiaomi Pad 6 Pro", "Xiaomi Pad 6",
+      "Redmi Pad SE 2", "Redmi Pad SE", "Redmi Pad Pro", "Redmi Pad",
+      "POCO Pad"
+    ],
+    "Oppo": [
+      "Oppo Pad 3 Pro", "Oppo Pad 3", "Oppo Pad 2", "Oppo Pad",
+      "Oppo Pad Air 2", "Oppo Pad Air"
+    ],
+    "Vivo": [
+      "Vivo Pad 3 Pro", "Vivo Pad 3", "Vivo Pad 2", "Vivo Pad"
+    ],
+    "Honor": [
+      "Honor Pad 9 Pro", "Honor Pad 9", "Honor Pad X9", "Honor Pad X8a",
+      "Honor Pad 8", "Honor Pad 8 Pro"
+    ],
     "OnePlus": [
       "OnePlus Pad 2", "OnePlus Pad"
     ],
@@ -147,18 +147,6 @@ export const modelsByCategory = {
 
   "Laptops": {
     // Singapore popular brands (expanded)
-    "MSI": [
-      "Stealth 18 Studio", "Stealth 16 Studio", "Stealth 14 Studio",
-      "Raider GE78 HX", "Raider GE68 HX", "Raider GE78",
-      "Prestige 16 AI", "Prestige 14 AI", "Prestige 13 AI",
-      "Modern 15", "Modern 14", "Modern 13",
-      "Cyborg 15", "Cyborg 14", "Sword 17", "Sword 16"
-    ],
-    "Razer": [
-      "Blade 18 (2026)", "Blade 16 (2026)", "Blade 14 (2026)",
-      "Blade 18 (2025)", "Blade 16 (2025)", "Blade 14 (2025)",
-      "Blade Stealth 13", "Blade Pro 17"
-    ],
     // Existing brands (expanded)
     "Apple": [
       "MacBook Pro 16 M4", "MacBook Pro 14 M4",
@@ -220,25 +208,23 @@ export const modelsByCategory = {
       "Galaxy Book5 Pro 360", "Galaxy Book5 Pro", "Galaxy Book5 360", "Galaxy Book5",
       "Galaxy Book4 Ultra", "Galaxy Book4 Pro 360", "Galaxy Book4 Pro", "Galaxy Book4",
       "Galaxy Book3 Ultra", "Galaxy Book3 Pro 360", "Galaxy Book3 Pro"
-    ]
+    ],
+    "MSI": [
+      "Stealth 18 Studio", "Stealth 16 Studio", "Stealth 14 Studio",
+      "Raider GE78 HX", "Raider GE68 HX", "Raider GE78",
+      "Prestige 16 AI", "Prestige 14 AI", "Prestige 13 AI",
+      "Modern 15", "Modern 14", "Modern 13",
+      "Cyborg 15", "Cyborg 14", "Sword 17", "Sword 16"
+    ],
+    "Razer": [
+      "Blade 18 (2026)", "Blade 16 (2026)", "Blade 14 (2026)",
+      "Blade 18 (2025)", "Blade 16 (2025)", "Blade 14 (2025)",
+      "Blade Stealth 13", "Blade Pro 17"
+    ],
   },
 
   "Headphones": {
     // Singapore popular brands (expanded)
-    "Audio-Technica": [
-      "ATH-M50xBT2", "ATH-M50x", "ATH-M40x", "ATH-M20x",
-      "ATH-SQ1TW", "ATH-CKS50TW", "ATH-CK1TW", "ATH-SPORT5TW",
-      "ATH-ANC300TW", "ATH-ANC900BT", "ATH-SR50BT", "ATH-WS990BT"
-    ],
-    "Samsung": [
-      "Galaxy Buds 3 Pro", "Galaxy Buds 3", "Galaxy Buds 2 Pro", "Galaxy Buds 2", "Galaxy Buds Live", "Galaxy Buds Pro",
-      "Galaxy Buds FE", "Galaxy Buds+"
-    ],
-    "Xiaomi": [
-      "Redmi Buds 6 Pro", "Redmi Buds 6", "Redmi Buds 5 Pro", "Redmi Buds 5",
-      "Mi True Wireless 3", "Mi True Wireless 2", "Mi True Wireless 1",
-      "Xiaomi Buds 5", "Xiaomi Buds 4 Pro", "Xiaomi Buds 4"
-    ],
     // Existing brands (expanded)
     "Sony": [
       "WH-1000XM6", "WH-1000XM5", "WH-1000XM4", "WH-1000XM3",
@@ -276,6 +262,20 @@ export const modelsByCategory = {
       "Endurance Peak 4", "Endurance Peak 3", "Endurance Race 2",
       "PartyBox Ultimate", "PartyBox Encore", "PartyBox 320", "PartyBox 120",
       "Flip 7", "Flip 6", "Charge 6", "Charge 5", "Xtreme 4", "Xtreme 3", "BoomBox 3", "BoomBox 2"
+    ],
+    "Audio-Technica": [
+      "ATH-M50xBT2", "ATH-M50x", "ATH-M40x", "ATH-M20x",
+      "ATH-SQ1TW", "ATH-CKS50TW", "ATH-CK1TW", "ATH-SPORT5TW",
+      "ATH-ANC300TW", "ATH-ANC900BT", "ATH-SR50BT", "ATH-WS990BT"
+    ],
+    "Samsung": [
+      "Galaxy Buds 3 Pro", "Galaxy Buds 3", "Galaxy Buds 2 Pro", "Galaxy Buds 2", "Galaxy Buds Live", "Galaxy Buds Pro",
+      "Galaxy Buds FE", "Galaxy Buds+"
+    ],
+    "Xiaomi": [
+      "Redmi Buds 6 Pro", "Redmi Buds 6", "Redmi Buds 5 Pro", "Redmi Buds 5",
+      "Mi True Wireless 3", "Mi True Wireless 2", "Mi True Wireless 1",
+      "Xiaomi Buds 5", "Xiaomi Buds 4 Pro", "Xiaomi Buds 4"
     ],
     "Marshall": [
       "Monitor III", "Monitor II A.N.C.", "Monitor",
