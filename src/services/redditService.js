@@ -1,3 +1,4 @@
+// v2 - direct fetch
 import Sentiment from 'sentiment';
 
 const sentiment = new Sentiment();
