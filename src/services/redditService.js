@@ -5,14 +5,17 @@ const sentiment = new Sentiment();
 export const getRedditPosts = async (brand, model, limit = 25) => {
   try {
     const searchQuery = `${brand} ${model}`;
-    const encodedQuery = encodeURIComponent(searchQuery);
+
+    const baseUrl = typeof window !== 'undefined'
+      ? `${window.location.protocol}//${window.location.host}`
+      : '';
 
     const response = await fetch(
-      `https://www.reddit.com/search.json?q=${encodedQuery}&limit=${limit}&sort=relevance&restrict_sr=false&t=all`
+      `${baseUrl}/api/reddit?q=${encodeURIComponent(searchQuery)}`
     );
 
     if (!response.ok) {
-      throw new Error(`Reddit responded with ${response.status}`);
+      throw new Error(`Proxy responded with ${response.status}`);
     }
 
     const data = await response.json();
@@ -68,7 +71,7 @@ export const analyzeRedditSentiment = (posts) => {
   posts.forEach(post => {
     const content = `${post.title} ${post.text}`.toLowerCase();
     const result = sentiment.analyze(content);
-    const score = result.comparative; // -1 to 1 scale
+    const score = result.comparative;
 
     totalScore += score;
 
@@ -106,7 +109,6 @@ export const analyzeRedditSentiment = (posts) => {
   const total = posts.length;
   const overallScore = total > 0 ? totalScore / total : 0;
 
-  // Determine trend based on recent posts
   const recentPosts = posts.slice(0, Math.min(10, posts.length));
   let recentScore = 0;
   recentPosts.forEach(post => {
