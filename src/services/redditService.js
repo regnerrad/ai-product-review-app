@@ -5,17 +5,14 @@ const sentiment = new Sentiment();
 export const getRedditPosts = async (brand, model, limit = 25) => {
   try {
     const searchQuery = `${brand} ${model}`;
-
-    const baseUrl = typeof window !== 'undefined'
-      ? `${window.location.protocol}//${window.location.host}`
-      : '';
+    const encodedQuery = encodeURIComponent(searchQuery);
 
     const response = await fetch(
-      `${baseUrl}/api/reddit?q=${encodeURIComponent(searchQuery)}`
+      `https://www.reddit.com/search.json?q=${encodedQuery}&limit=${limit}&sort=relevance&restrict_sr=false&t=all`
     );
 
     if (!response.ok) {
-      throw new Error(`Proxy responded with ${response.status}`);
+      throw new Error(`Reddit responded with ${response.status}`);
     }
 
     const data = await response.json();
