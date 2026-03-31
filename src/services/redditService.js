@@ -2,7 +2,7 @@ import Sentiment from 'sentiment';
 
 const sentiment = new Sentiment();
 
-const REDDIT_PROXY = 'https://broken-field-1653.darrengeryl.workers.dev';
+const REDDIT_PROXY = 'https://findo-reddit-proxy.darrengeryl.workers.dev';
 
 export const getRedditPosts = async (brand, model, limit = 25) => {
   try {
