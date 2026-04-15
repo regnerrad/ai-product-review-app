@@ -1,5 +1,6 @@
 import { getRedditSentiment } from './redditService';
 import { getYouTubeSentiment } from './youtubeService';
+import { getAffiliatePurchaseOptions } from './affiliateService';
 
 // Combine Reddit and YouTube sentiment data
 const combineSentimentData = (reddit, youtube) => {
@@ -85,11 +86,14 @@ export const callOpenAI = async ({ brand, model, question, category }) => {
     const combinedSentiment = combineSentimentData(redditSentiment, youtubeSentiment);
     console.log('Combined sentiment:', combinedSentiment);
 
+    // Generate affiliate links for this product
+    const affiliateOptions = getAffiliatePurchaseOptions(brand, model);
+
     const OPENROUTER_API_KEY = process.env.REACT_APP_OPENROUTER_API_KEY?.trim();
 
     if (!OPENROUTER_API_KEY) {
       console.warn('OpenRouter API key is not configured, using mock data with real sentiment');
-      return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment);
+      return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment, affiliateOptions);
     }
 
     const redditContext = redditSentiment && redditSentiment.total_posts_analyzed > 0
@@ -131,15 +135,6 @@ Return ONLY a valid JSON object — no markdown, no code blocks, no extra text:
   },
   "pros": ["pro1", "pro2", "pro3"],
   "cons": ["con1", "con2"],
-  "purchase_options": [
-    {
-      "store": "Store name",
-      "price": "$XXX",
-      "availability": "In Stock",
-      "url": "https://example.com",
-      "is_shopee": false
-    }
-  ],
   "alternatives": [
     {
       "brand": "Brand",
@@ -153,9 +148,9 @@ Return ONLY a valid JSON object — no markdown, no code blocks, no extra text:
 Rules:
 - pros: exactly 3 items
 - cons: exactly 2 items
-- purchase_options: exactly 2 stores
 - alternatives: exactly 1 item
-- rating_info: only average_rating and total_reviews, no breakdown`
+- rating_info: only average_rating and total_reviews, no breakdown
+- Do NOT include purchase_options — these are handled separately`
           },
           {
             role: "user",
@@ -173,7 +168,7 @@ Rules:
 
       if (response.status === 429 || response.status === 402) {
         console.warn('API rate limit reached, using mock data with real sentiment');
-        return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment);
+        return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment, affiliateOptions);
       }
 
       throw new Error(`OpenRouter API error: ${response.status}`);
@@ -206,14 +201,16 @@ Rules:
       // Truncation guard — if JSON doesn't close properly, fall back to mock
       if (!cleanContent.endsWith('}')) {
         console.warn('Response appears truncated, falling back to mock');
-        return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment);
+        return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment, affiliateOptions);
       }
 
       const parsedResponse = JSON.parse(cleanContent);
       console.log('Successfully parsed JSON response');
 
+      // Always override purchase_options with our affiliate links
       const finalResponse = {
         ...parsedResponse,
+        purchase_options: affiliateOptions,
         reddit_sentiment: redditSentiment || null,
         youtube_sentiment: youtubeSentiment || null,
         social_sentiment: combinedSentiment
@@ -223,18 +220,19 @@ Rules:
     } catch (parseError) {
       console.error('Failed to parse JSON response:', parseError);
       console.error('Raw content that failed (first 500 chars):', data.choices[0].message.content.substring(0, 500));
-      return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment);
+      return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment, affiliateOptions);
     }
   } catch (error) {
     console.error('OpenRouter call failed:', error);
     const redditSentiment = await getRedditSentiment(brand, model);
     const youtubeSentiment = await getYouTubeSentiment(brand, model);
     const combinedSentiment = combineSentimentData(redditSentiment, youtubeSentiment);
-    return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment);
+    const affiliateOptions = getAffiliatePurchaseOptions(brand, model);
+    return getMockResponse(brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment, affiliateOptions);
   }
 };
 
-const getMockResponse = (brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment) => {
+const getMockResponse = (brand, model, question, category, redditSentiment, youtubeSentiment, combinedSentiment, affiliateOptions) => {
   const questionLower = question?.toLowerCase() || '';
   let keyPhrase = 'overall satisfaction';
 
@@ -283,22 +281,7 @@ const getMockResponse = (brand, model, question, category, redditSentiment, yout
       "Battery life could be improved for heavy usage",
       "Premium price point for higher-end models"
     ],
-    purchase_options: [
-      {
-        store: "Shopee",
-        price: "$299-$399",
-        availability: "In Stock",
-        url: `https://shopee.sg/search?keyword=${encodeURIComponent(brand + ' ' + model)}`,
-        is_shopee: true
-      },
-      {
-        store: "Lazada",
-        price: "$329",
-        availability: "In Stock",
-        url: `https://www.lazada.sg/catalog/?q=${encodeURIComponent(brand + ' ' + model)}`,
-        is_shopee: false
-      }
-    ],
+    purchase_options: affiliateOptions,
     alternatives: [
       {
         brand: brand === "Apple" ? "Samsung" : "Apple",

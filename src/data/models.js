@@ -1,10 +1,8 @@
-// Fully updated models by category – as of 2026 (expanded model lists)
+// Fully updated models by category – as of April 2026
 export const modelsByCategory = {
   "Smartphones": {
-    // Singapore popular brands
-    // Existing brands (expanded)
     "Apple": [
-      "iPhone 17 Pro Max", "iPhone 17 Pro", "iPhone 17 Plus", "iPhone 17",
+      "iPhone 17 Pro Max", "iPhone 17 Pro", "iPhone 17 Plus", "iPhone 17", "iPhone 17e",
       "iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone 16 Plus", "iPhone 16",
       "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15 Plus", "iPhone 15",
       "iPhone 14 Pro Max", "iPhone 14 Pro", "iPhone 14 Plus", "iPhone 14",
@@ -15,46 +13,51 @@ export const modelsByCategory = {
       "Galaxy S25 Ultra", "Galaxy S25+", "Galaxy S25",
       "Galaxy S24 Ultra", "Galaxy S24+", "Galaxy S24",
       "Galaxy S23 Ultra", "Galaxy S23+", "Galaxy S23",
+      "Galaxy Z Fold 8", "Galaxy Z Flip 8",
       "Galaxy Z Fold 7", "Galaxy Z Flip 7",
       "Galaxy Z Fold 6", "Galaxy Z Flip 6",
-      "Galaxy Z Fold 5", "Galaxy Z Flip 5",
-      "Galaxy A76", "Galaxy A75", "Galaxy A56", "Galaxy A55", "Galaxy A36", "Galaxy A35", "Galaxy A26", "Galaxy A25",
-      "Galaxy A16", "Galaxy A15", "Galaxy A06", "Galaxy A05",
+      "Galaxy Z TriFold",
+      "Galaxy A57", "Galaxy A37", "Galaxy A76", "Galaxy A75",
+      "Galaxy A56", "Galaxy A55", "Galaxy A36", "Galaxy A35",
+      "Galaxy A26", "Galaxy A25", "Galaxy A16", "Galaxy A15",
+      "Galaxy A06", "Galaxy A05",
       "Galaxy M55", "Galaxy M35", "Galaxy M15", "Galaxy F55", "Galaxy F15"
     ],
     "Google": [
-      "Pixel 10 Pro Fold", "Pixel 10 Pro", "Pixel 10",
+      "Pixel 11 Pro Fold", "Pixel 11 Pro", "Pixel 11",
+      "Pixel 10 Pro Fold", "Pixel 10 Pro", "Pixel 10", "Pixel 10a",
       "Pixel 9 Pro Fold", "Pixel 9 Pro", "Pixel 9", "Pixel 9a",
       "Pixel 8 Pro", "Pixel 8", "Pixel 8a",
-      "Pixel 7 Pro", "Pixel 7", "Pixel 7a",
-      "Pixel Fold 2", "Pixel Fold"
+      "Pixel 7 Pro", "Pixel 7", "Pixel 7a"
     ],
     "OnePlus": [
-      "OnePlus 13", "OnePlus 13R",
+      "OnePlus 15", "OnePlus 15T", "OnePlus 15R",
+      "OnePlus 14", "OnePlus 13", "OnePlus 13R",
       "OnePlus 12", "OnePlus 12R",
-      "OnePlus 11", "OnePlus 11R",
       "OnePlus Open 2", "OnePlus Open",
       "OnePlus Nord 5", "OnePlus Nord 5R",
-      "OnePlus Nord 4", "OnePlus Nord CE 4", "OnePlus Nord CE 3",
-      "OnePlus Nord N30", "OnePlus Nord N20"
+      "OnePlus Nord 4", "OnePlus Nord CE 4", "OnePlus Nord CE 3"
     ],
     "Xiaomi": [
+      "Xiaomi 17 Ultra", "Xiaomi 17 Pro", "Xiaomi 17",
       "Xiaomi 15 Ultra", "Xiaomi 15 Pro", "Xiaomi 15",
       "Xiaomi 14 Ultra", "Xiaomi 14 Pro", "Xiaomi 14",
-      "Xiaomi 13 Ultra", "Xiaomi 13 Pro", "Xiaomi 13",
       "Redmi Note 14 Pro+", "Redmi Note 14 Pro", "Redmi Note 14",
       "Redmi Note 13 Pro+", "Redmi Note 13 Pro", "Redmi Note 13",
-      "POCO F7 Ultra", "POCO F7 Pro", "POCO F6", "POCO F6 Pro",
+      "POCO F8 Ultra", "POCO F7 Ultra", "POCO F7 Pro", "POCO F6 Pro", "POCO F6",
       "POCO X7 Pro", "POCO X6", "POCO M6 Pro", "POCO M6"
     ],
     "Oppo": [
-      "Find X8 Pro", "Find X8", "Find X7 Ultra", "Find X7", "Find X6 Pro",
-      "Reno 13 Pro", "Reno 13", "Reno 12 Pro", "Reno 12", "Reno 11 Pro", "Reno 11",
+      "Find X9 Ultra", "Find X9 Pro", "Find X9",
+      "Find X8 Pro", "Find X8", "Find X7 Ultra", "Find X7",
+      "Reno 13 Pro", "Reno 13", "Reno 12 Pro", "Reno 12",
+      "Reno 11 Pro", "Reno 11",
       "A98 5G", "A78 5G", "A58 5G", "A38", "A18",
-      "K12x", "K11x", "F27 Pro+", "F25 Pro", "F23"
+      "F27 Pro+", "F25 Pro", "F23"
     ],
     "Vivo": [
-      "X200 Pro", "X200", "X100 Pro", "X100", "X90 Pro+", "X90 Pro",
+      "X300 Ultra", "X300 Pro", "X300",
+      "X200 Pro", "X200", "X100 Pro", "X100",
       "V40 Pro", "V40", "V30 Pro", "V30", "V29e", "V27 Pro",
       "Y200 5G", "Y100 5G", "Y56 5G", "Y36", "Y28", "Y18",
       "T3 Pro", "T3 5G", "T2 Pro", "T2 5G"
@@ -62,23 +65,27 @@ export const modelsByCategory = {
     "Realme": [
       "GT 7 Pro", "GT 7", "GT 6", "GT 6T", "GT 5 Pro", "GT 5",
       "13 Pro+", "13 Pro", "13", "12 Pro+", "12 Pro", "12",
-      "C67 5G", "C65 5G", "C55", "C51", "C31",
-      "Note 50", "Note 60", "P1 Pro 5G", "P1 5G"
+      "P4 Power", "P2 Pro", "P1 Pro 5G", "P1 5G",
+      "C67 5G", "C65 5G", "C55", "C51",
+      "Note 60", "Note 50"
     ],
     "Honor": [
-      "Magic 7 Pro", "Magic 7", "Magic 6 Pro", "Magic 6", "Magic 5 Pro", "Magic 5",
-      "200 Pro", "200", "100 Pro", "100", "90 Pro", "90", "80 Pro", "80",
-      "X9c 5G", "X9b 5G", "X8b", "X7c", "X6a",
-      "Pad 9", "Pad X9", "Pad 8"
+      "Magic 8 RSR", "Magic 8 Pro", "Magic 8",
+      "Magic V6", "Magic V3",
+      "Magic 7 Pro", "Magic 7", "Magic 6 Pro", "Magic 6",
+      "200 Pro", "200", "100 Pro", "100", "90 Pro", "90",
+      "X9c 5G", "X9b 5G", "X8b", "X7c", "X6a"
     ],
     "Motorola": [
-      "Edge 50 Ultra", "Edge 50 Pro", "Edge 50 Fusion", "Edge 50",
-      "Edge 40 Pro", "Edge 40", "Edge 30 Pro", "Edge 30",
+      "Razr 70 Ultra", "Razr 70",
       "Razr 60 Ultra", "Razr 60", "Razr 50 Ultra", "Razr 50",
+      "Edge 50 Ultra", "Edge 50 Pro", "Edge 50 Fusion", "Edge 50",
+      "Edge 40 Pro", "Edge 40",
       "Moto G Power 2026", "Moto G Stylus 2026", "Moto G 2026",
       "Moto G84", "Moto G54", "Moto G34", "Moto G14"
     ],
     "Nothing": [
+      "Phone (4a) Pro", "Phone (4a)",
       "Phone (3)", "Phone (3a)", "Phone (3a) Plus",
       "Phone (2)", "Phone (2a)", "Phone (2a) Plus",
       "Phone (1)", "CMF Phone 1"
@@ -86,8 +93,6 @@ export const modelsByCategory = {
   },
 
   "Tablets": {
-    // Singapore popular brands (expanded)
-    // Existing brands (expanded)
     "Apple": [
       "iPad Pro 13 (M4)", "iPad Pro 11 (M4)",
       "iPad Pro 12.9 (6th gen)", "iPad Pro 11 (4th gen)",
@@ -112,7 +117,7 @@ export const modelsByCategory = {
     ],
     "Microsoft": [
       "Surface Pro 11", "Surface Pro 10", "Surface Pro 9",
-      "Surface Go 4", "Surface Go 3", "Surface Laptop Go 3",
+      "Surface Go 4", "Surface Go 3",
       "Surface Laptop Studio 3", "Surface Laptop Studio 2"
     ],
     "Google": [
@@ -132,7 +137,7 @@ export const modelsByCategory = {
     ],
     "Honor": [
       "Honor Pad 9 Pro", "Honor Pad 9", "Honor Pad X9", "Honor Pad X8a",
-      "Honor Pad 8", "Honor Pad 8 Pro"
+      "Honor Pad 8 Pro", "Honor Pad 8"
     ],
     "OnePlus": [
       "OnePlus Pad 2", "OnePlus Pad"
@@ -146,8 +151,6 @@ export const modelsByCategory = {
   },
 
   "Laptops": {
-    // Singapore popular brands (expanded)
-    // Existing brands (expanded)
     "Apple": [
       "MacBook Pro 16 M4", "MacBook Pro 14 M4",
       "MacBook Pro 16 M3", "MacBook Pro 14 M3",
@@ -220,12 +223,10 @@ export const modelsByCategory = {
       "Blade 18 (2026)", "Blade 16 (2026)", "Blade 14 (2026)",
       "Blade 18 (2025)", "Blade 16 (2025)", "Blade 14 (2025)",
       "Blade Stealth 13", "Blade Pro 17"
-    ],
+    ]
   },
 
   "Headphones": {
-    // Singapore popular brands (expanded)
-    // Existing brands (expanded)
     "Sony": [
       "WH-1000XM6", "WH-1000XM5", "WH-1000XM4", "WH-1000XM3",
       "WF-1000XM6", "WF-1000XM5", "WF-1000XM4", "WF-1000XM3",
@@ -238,7 +239,7 @@ export const modelsByCategory = {
       "QuietComfort 55", "QuietComfort 45", "QuietComfort 35 II",
       "QuietComfort Earbuds III", "QuietComfort Earbuds II", "QuietComfort Earbuds",
       "Sport Earbuds", "Sport Open Earbuds",
-      "Noise Cancelling Headphones 700", "SoundLink Around‑Ear Wireless II"
+      "Noise Cancelling Headphones 700", "SoundLink Around-Ear Wireless II"
     ],
     "Apple": [
       "AirPods Max 2", "AirPods Max",
@@ -259,9 +260,7 @@ export const modelsByCategory = {
       "Tour One M3", "Tour One M2", "Tour Pro 3", "Tour Pro 2",
       "Live 770NC", "Live 670NC", "Live 460NC", "Live 310BT",
       "Tune 770NC", "Tune 670NC", "Tune 520BT", "Tune 230NC TWS",
-      "Endurance Peak 4", "Endurance Peak 3", "Endurance Race 2",
-      "PartyBox Ultimate", "PartyBox Encore", "PartyBox 320", "PartyBox 120",
-      "Flip 7", "Flip 6", "Charge 6", "Charge 5", "Xtreme 4", "Xtreme 3", "BoomBox 3", "BoomBox 2"
+      "Endurance Peak 4", "Endurance Peak 3", "Endurance Race 2"
     ],
     "Audio-Technica": [
       "ATH-M50xBT2", "ATH-M50x", "ATH-M40x", "ATH-M20x",
@@ -269,13 +268,13 @@ export const modelsByCategory = {
       "ATH-ANC300TW", "ATH-ANC900BT", "ATH-SR50BT", "ATH-WS990BT"
     ],
     "Samsung": [
-      "Galaxy Buds 3 Pro", "Galaxy Buds 3", "Galaxy Buds 2 Pro", "Galaxy Buds 2", "Galaxy Buds Live", "Galaxy Buds Pro",
-      "Galaxy Buds FE", "Galaxy Buds+"
+      "Galaxy Buds 3 Pro", "Galaxy Buds 3", "Galaxy Buds 2 Pro", "Galaxy Buds 2",
+      "Galaxy Buds Live", "Galaxy Buds Pro", "Galaxy Buds FE", "Galaxy Buds+"
     ],
     "Xiaomi": [
       "Redmi Buds 6 Pro", "Redmi Buds 6", "Redmi Buds 5 Pro", "Redmi Buds 5",
-      "Mi True Wireless 3", "Mi True Wireless 2", "Mi True Wireless 1",
-      "Xiaomi Buds 5", "Xiaomi Buds 4 Pro", "Xiaomi Buds 4"
+      "Xiaomi Buds 5", "Xiaomi Buds 4 Pro", "Xiaomi Buds 4",
+      "Mi True Wireless 3", "Mi True Wireless 2"
     ],
     "Marshall": [
       "Monitor III", "Monitor II A.N.C.", "Monitor",
@@ -297,7 +296,6 @@ export const modelsByCategory = {
   },
 
   "Speakers": {
-    // Existing brands (already comprehensive)
     "Sonos": [
       "Era 300", "Era 100",
       "Move 2", "Move",
@@ -327,15 +325,15 @@ export const modelsByCategory = {
       "PartyBox Ultimate", "PartyBox Encore", "PartyBox 320", "PartyBox 120", "PartyBox 110",
       "Flip 7", "Flip 6", "Flip 5", "Flip 4",
       "Charge 6", "Charge 5", "Charge 4", "Charge 3",
-      "Xtreme 4", "Xtreme 3", "Xtreme 2", "Xtreme",
+      "Xtreme 4", "Xtreme 3", "Xtreme 2",
       "BoomBox 3", "BoomBox 2", "BoomBox",
       "Pulse 6", "Pulse 5", "Pulse 4",
       "Clip 5", "Clip 4", "Go 4", "Go 3"
     ],
     "Marshall": [
-      "Stanmore III", "Stanmore II", "Stanmore",
-      "Acton III", "Acton II", "Acton",
-      "Woburn III", "Woburn II", "Woburn",
+      "Stanmore III", "Stanmore II",
+      "Acton III", "Acton II",
+      "Woburn III", "Woburn II",
       "Emberton III", "Emberton II", "Emberton",
       "Willen II", "Willen",
       "Kilburn II", "Kilburn", "Tufton", "Stockwell II"
@@ -350,14 +348,12 @@ export const modelsByCategory = {
       "Echo Dot (5th Gen)", "Echo Dot (4th Gen)",
       "Echo Pop", "Echo Pop Kids",
       "Echo (4th Gen)", "Echo (3rd Gen)",
-      "Echo Auto", "Echo Buds", "Echo Frames"
+      "Echo Auto"
     ],
     "Google": [
-      "Nest Audio", "Nest Audio 2",
+      "Nest Audio 2", "Nest Audio",
       "Nest Hub Max", "Nest Hub (3rd Gen)", "Nest Hub (2nd Gen)",
-      "Nest Mini", "Nest Mini (2nd Gen)",
-      "Pixel Buds Pro 2", "Pixel Buds A‑Series",
-      "Home Mini", "Home Max"
+      "Nest Mini", "Home Mini", "Home Max"
     ],
     "Bang & Olufsen": [
       "Beosound A5", "Beosound A1 (2nd Gen)", "Beosound Explore",
@@ -366,15 +362,14 @@ export const modelsByCategory = {
       "Beoplay A1", "Beoplay P6", "Beoplay P2"
     ],
     "Ultimate Ears": [
-      "EPICBOOM", "MEGABOOM 4", "MEGABOOM 3", "MEGABOOM",
+      "EPICBOOM", "MEGABOOM 4", "MEGABOOM 3",
       "BOOM 4", "BOOM 3", "BOOM 2",
-      "WONDERBOOM 4", "WONDERBOOM 3", "WONDERBOOM 2", "WONDERBOOM",
+      "WONDERBOOM 4", "WONDERBOOM 3", "WONDERBOOM 2",
       "ROLL 3", "ROLL 2"
     ]
   },
 
   "Cameras": {
-    // Existing brands (expanded)
     "Canon": [
       "EOS R5 Mark II", "EOS R5", "EOS R6 Mark III", "EOS R6 Mark II", "EOS R6",
       "EOS R8", "EOS R7", "EOS R10", "EOS R50", "EOS R100",
@@ -411,15 +406,14 @@ export const modelsByCategory = {
     ],
     "DJI": [
       "Osmo Pocket 3", "Osmo Pocket 2", "Osmo Pocket",
-      "Osmo Action 5", "Osmo Action 4", "Osmo Action 3", "Osmo Action",
+      "Osmo Action 5", "Osmo Action 4", "Osmo Action 3",
       "Osmo Mobile 7", "Osmo Mobile 6", "Osmo Mobile SE",
       "Ronin 4D", "Ronin SC", "Ronin S"
     ],
     "GoPro": [
       "Hero 13 Black", "Hero 12 Black", "Hero 11 Black", "Hero 10 Black", "Hero 9 Black",
       "Max 2", "Max",
-      "Hero 12 Black Mini", "Hero 11 Black Mini",
-      "Hero Session"
+      "Hero 12 Black Mini", "Hero 11 Black Mini"
     ],
     "Leica": [
       "Q3 43", "Q3", "Q2", "Q",
@@ -428,15 +422,12 @@ export const modelsByCategory = {
       "D-Lux 8", "D-Lux 7", "V-Lux 3", "C-Lux"
     ],
     "OM System": [
-      "OM-1 Mark II", "OM-1", "OM-5", "OM-5",
-      "TG-7", "TG-6", "TG-5",
-      "M.Zuiko Digital ED 90mm F3.5 Macro IS PRO",
-      "M.Zuiko Digital ED 150-400mm F4.5 TC1.25x IS PRO"
+      "OM-1 Mark II", "OM-1", "OM-5",
+      "TG-7", "TG-6", "TG-5"
     ]
   },
 
   "Home appliances": {
-    // Traditional appliances (expanded)
     "Hitachi": [
       "R-BG460P7S Refrigerator", "R-HW610RX Refrigerator", "R-SF48BM Refrigerator",
       "SF-140WV Washing Machine", "SF-100WV Washing Machine", "BD-90CV Washing Machine",
@@ -452,7 +443,7 @@ export const modelsByCategory = {
       "NN-SN966S Microwave", "NN-ST64SM Microwave"
     ],
     "Mitsubishi Electric": [
-      "MR-CX46E Refrigerator", "MR-CX46E Refrigerator", "MR-LX46E Refrigerator",
+      "MR-CX46E Refrigerator", "MR-LX46E Refrigerator",
       "MSZ-GE22VA Air Conditioner", "MSZ-GE25VA Air Conditioner", "MSZ-GE35VA Air Conditioner",
       "MA-V210W Washing Machine", "MA-V170W Washing Machine",
       "HC-V6000 Vacuum Cleaner", "HC-V5000 Vacuum Cleaner"
@@ -467,9 +458,9 @@ export const modelsByCategory = {
     "LG": [
       "GC-B257SLV Refrigerator", "GC-B247SLV Refrigerator", "GC-B207SLV Refrigerator",
       "FH4G1JCHK6N Washing Machine", "FH4G1JCHK5N Washing Machine", "F4V5RYP0W Washing Machine",
-      "DualCool Air Conditioner", "DualCool Inverter Air Conditioner",
-      "CordZero A9 Vacuum Cleaner", "CordZero A9K Vacuum Cleaner",
-      "NeoChef Microwave", "NeoChef Smart Microwave",
+      "DualCool Inverter Air Conditioner", "DualCool Air Conditioner",
+      "CordZero A9K Vacuum Cleaner", "CordZero A9 Vacuum Cleaner",
+      "NeoChef Smart Microwave", "NeoChef Microwave",
       "InstaView Range", "InstaView Oven"
     ],
     "Samsung": [
@@ -493,7 +484,6 @@ export const modelsByCategory = {
       "360 Vis Nav Robot Vacuum", "360 Heurist Robot Vacuum",
       "Supersonic Hair Dryer", "Airwrap Styler", "Corrale Straightener"
     ],
-    // Smart home (existing)
     "Amazon": [
       "Echo Studio (2026)", "Echo Studio",
       "Echo Show 15", "Echo Show 10 (2026)", "Echo Show 8 (2026)", "Echo Show 5 (2026)",
@@ -541,7 +531,6 @@ export const modelsByCategory = {
   },
 
   "TVs": {
-    // Existing brands (expanded)
     "LG": [
       "OLED G6 Series (77\", 65\", 55\")", "OLED G5 Series (83\", 77\", 65\", 55\")",
       "OLED C5 Series (83\", 77\", 65\", 55\", 48\", 42\")", "OLED C4 Series",
@@ -597,7 +586,6 @@ export const modelsByCategory = {
   },
 
   "Gaming Consoles": {
-    // Existing brands (expanded)
     "Sony": [
       "PlayStation 6", "PlayStation 5 Pro", "PlayStation 5 Slim", "PlayStation 5",
       "PlayStation 4 Pro", "PlayStation 4 Slim", "PlayStation 4",
@@ -614,14 +602,14 @@ export const modelsByCategory = {
     "Nintendo": [
       "Switch 2", "Switch 2 Pro", "Switch 2 Lite",
       "Switch Pro", "Switch OLED", "Switch Lite", "Switch",
-      "Joy‑Con (L/R)", "Nintendo Switch Pro Controller",
+      "Joy-Con (L/R)", "Nintendo Switch Pro Controller",
       "NES Controller", "SNES Controller", "Nintendo 64 Controller",
-      "GameCube Controller", "Sega Genesis Controller"
+      "GameCube Controller"
     ],
     "Valve": [
       "Steam Deck 2", "Steam Deck OLED", "Steam Deck (512GB)", "Steam Deck (256GB)", "Steam Deck (64GB)",
       "Steam Controller 2", "Steam Controller",
-      "Steam Link", "Steam Machine"
+      "Steam Link"
     ],
     "Asus": [
       "ROG Ally X", "ROG Ally (2024)", "ROG Ally (2023)",
@@ -631,7 +619,7 @@ export const modelsByCategory = {
     "Lenovo": [
       "Legion Go 2", "Legion Go", "Legion Go Lite",
       "Legion M600 Gaming Mouse", "Legion K500 Pro Keyboard",
-      "Legion H500 Pro Headset", "Legion G H500 Headset"
+      "Legion H500 Pro Headset"
     ],
     "MSI": [
       "Claw 8 AI+", "Claw 7 AI+", "Claw A1M",
@@ -641,24 +629,6 @@ export const modelsByCategory = {
   },
 
   "Smartwatches": {
-    // Singapore popular brands (expanded)
-    "Xiaomi": [
-      "Watch 2 Pro", "Watch 2", "Watch S3", "Watch S2",
-      "Smart Band 9 Pro", "Smart Band 9", "Smart Band 8 Pro", "Smart Band 8",
-      "Mi Watch Lite", "Mi Watch"
-    ],
-    "Huawei": [
-      "Watch GT 5 Pro", "Watch GT 5", "Watch GT 4", "Watch GT 3 Pro", "Watch GT 3",
-      "Watch Ultimate 2", "Watch Ultimate",
-      "Watch D2", "Watch D", "Watch Fit 3", "Watch Fit 2", "Watch Fit"
-    ],
-    "Amazfit": [
-      "T-Rex 3", "T-Rex 2", "T-Rex Pro",
-      "GTR 4", "GTR 3 Pro", "GTR 3",
-      "Balance", "Cheetah Pro", "Cheetah",
-      "Falcon", "Neo", "Pop 3S", "Pop 3R"
-    ],
-    // Existing brands (expanded)
     "Apple": [
       "Apple Watch Ultra 3", "Apple Watch Ultra 2", "Apple Watch Ultra",
       "Apple Watch Series 10", "Apple Watch Series 9", "Apple Watch Series 8", "Apple Watch Series 7",
@@ -694,6 +664,22 @@ export const modelsByCategory = {
       "Luxe 2", "Luxe",
       "Ace 4", "Ace 3"
     ],
+    "Xiaomi": [
+      "Watch 2 Pro", "Watch 2", "Watch S3", "Watch S2",
+      "Smart Band 9 Pro", "Smart Band 9", "Smart Band 8 Pro", "Smart Band 8",
+      "Mi Watch Lite", "Mi Watch"
+    ],
+    "Huawei": [
+      "Watch GT 5 Pro", "Watch GT 5", "Watch GT 4", "Watch GT 3 Pro", "Watch GT 3",
+      "Watch Ultimate 2", "Watch Ultimate",
+      "Watch D2", "Watch D", "Watch Fit 3", "Watch Fit 2", "Watch Fit"
+    ],
+    "Amazfit": [
+      "T-Rex 3", "T-Rex 2", "T-Rex Pro",
+      "GTR 4", "GTR 3 Pro", "GTR 3",
+      "Balance", "Cheetah Pro", "Cheetah",
+      "Falcon", "Neo", "Pop 3S", "Pop 3R"
+    ],
     "Withings": [
       "ScanWatch 2 (42mm, 38mm)", "ScanWatch Nova (42mm, 38mm)",
       "Body Scan", "Body Cardio",
@@ -708,23 +694,20 @@ export const modelsByCategory = {
 };
 
 // ===========================================
-// Helper functions (unchanged)
+// Helper functions
 // ===========================================
 
 export const getBrandsByCategory = (category) => {
   if (!category) return [];
 
-  // Handle special cases for home appliances (with underscore)
   if (category === 'home_appliances' || category === 'home appliances') {
     return Object.keys(modelsByCategory['Home appliances'] || {});
   }
 
-  // Try exact match first
   if (modelsByCategory[category]) {
     return Object.keys(modelsByCategory[category]);
   }
 
-  // Try case-insensitive match
   const categoryLower = category.toLowerCase();
   const foundCategory = Object.keys(modelsByCategory).find(
     key => key.toLowerCase() === categoryLower
@@ -734,7 +717,6 @@ export const getBrandsByCategory = (category) => {
     return Object.keys(modelsByCategory[foundCategory]);
   }
 
-  // Try partial match (e.g., "gaming" matches "Gaming Consoles")
   const partialMatch = Object.keys(modelsByCategory).find(
     key => key.toLowerCase().includes(categoryLower)
   );
@@ -749,19 +731,16 @@ export const getBrandsByCategory = (category) => {
 export const getModelsByBrandAndCategory = (category, brand) => {
   if (!category || !brand) return [];
 
-  // Handle special cases for home appliances (with underscore)
   if (category === 'home_appliances' || category === 'home appliances') {
     if (modelsByCategory['Home appliances'] && modelsByCategory['Home appliances'][brand]) {
       return modelsByCategory['Home appliances'][brand];
     }
   }
 
-  // Try exact match first
   if (modelsByCategory[category] && modelsByCategory[category][brand]) {
     return modelsByCategory[category][brand];
   }
 
-  // Try case-insensitive category match
   const categoryLower = category.toLowerCase();
   const foundCategory = Object.keys(modelsByCategory).find(
     key => key.toLowerCase() === categoryLower || key.toLowerCase().includes(categoryLower)
@@ -771,7 +750,6 @@ export const getModelsByBrandAndCategory = (category, brand) => {
     return modelsByCategory[foundCategory][brand];
   }
 
-  // Try case-insensitive brand match within the category
   if (foundCategory) {
     const brandLower = brand.toLowerCase();
     const foundBrand = Object.keys(modelsByCategory[foundCategory]).find(
@@ -815,7 +793,6 @@ export const getAllProducts = () => {
 export const getProductsByCategory = (category) => {
   if (!category) return [];
 
-  // Handle special cases for home appliances
   if (category === 'home_appliances' || category === 'home appliances') {
     const products = [];
     Object.entries(modelsByCategory['Home appliances'] || {}).forEach(([brand, models]) => {
